@@ -1,96 +1,108 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>PROJUR IPSEM — Dashboard 2026</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono&family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-<style>
-    :root{--bg:#0f1117;--bg2:#161b27;--border:rgba(255,255,255,0.07);--text:#e8eaf0;--c-jos:#4f8ef7;--c-jul:#34d399;--c-jun:#a78bfa;--c-raf:#fb923c}
-    body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);margin:0;padding:20px}
-    .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:20px}
-    .card{background:var(--bg2);padding:20px;border-radius:10px;border:1px solid var(--border)}
-    .f-pill{background:transparent;border:1px solid var(--border);color:#8b92a8;padding:6px 12px;border-radius:20px;cursor:pointer;margin-right:5px;font-size:11px}
-    .f-pill.active{background:var(--text);color:var(--bg)}
-    .day-block{background:var(--bg2);border:1px solid var(--border);border-radius:8px;margin-bottom:10px}
-    .day-hdr{padding:12px;cursor:pointer;display:flex;justify-content:space-between;font-weight:600}
-    .day-body{padding:0 12px 12px;border-top:1px solid var(--border)}
-    .proc{padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.03)}
-</style>
+    <meta charset="UTF-8">
+    <title>PROJUR IPSEM — Dashboard 2026</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root{--bg:#0f1117;--bg2:#161b27;--border:rgba(255,255,255,0.07);--text:#e8eaf0;--c-jos:#4f8ef7;--c-jul:#34d399;--c-jun:#a78bfa;--c-raf:#fb923c}
+        body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);margin:0;padding:24px}
+        .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px}
+        .adv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:15px;margin-bottom:40px}
+        .adv-card{background:var(--bg2);padding:24px;border-radius:12px;border:1px solid var(--border);border-top:4px solid #fff}
+        .val{font-size:38px;font-weight:600;display:block;margin:10px 0}
+        .f-pill{background:transparent;border:1px solid var(--border);color:#8b92a8;padding:10px 20px;border-radius:30px;cursor:pointer;margin-right:8px;transition:0.2s}
+        .f-pill.active{background:var(--text);color:var(--bg);border-color:var(--text)}
+        .day-box{background:var(--bg2);border:1px solid var(--border);border-radius:10px;margin-bottom:12px;overflow:hidden}
+        .day-hdr{padding:15px 20px;background:rgba(255,255,255,0.02);display:flex;justify-content:space-between;cursor:pointer;font-weight:600}
+        .day-content{padding:0 20px 15px;display:block}
+        .proc-row{padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+        .proc-row:last-child{border-bottom:none}
+    </style>
 </head>
 <body>
+    <div class="header">
+        <div>
+            <h1 style="margin:0;font-size:22px">PROJUR IPSEM — Dashboard de Processos</h1>
+            <div id="sync" style="color:#555d72;font-size:12px;margin-top:5px">Sincronizando dados...</div>
+        </div>
+    </div>
+
+    <div class="adv-grid" id="adv-cards"></div>
+
     <div style="margin-bottom:20px">
-        <h2 style="margin:0">PROJUR IPSEM Dashboard</h2>
-        <div id="sync" style="font-size:11px;color:#555d72">Sincronizando...</div>
+        <h3 style="font-size:14px;color:#8b92a8;margin-bottom:15px">AGENDA INTEGRAL DE PRAZOS</h3>
+        <div id="filters">
+            <button class="f-pill active" onclick="filtrar('Todos', this)">TODOS OS PRAZOS</button>
+        </div>
     </div>
 
-    <div class="metrics">
-        <div class="card" style="border-top:3px solid var(--c-jos)">Total: <span id="t-total">...</span></div>
-        <div class="card" style="border-top:3px solid var(--c-jul)">Com Prazo: <span id="t-prazo">...</span></div>
-        <div class="card" style="border-top:3px solid var(--c-jun)">Judiciais: <span id="t-jud">...</span></div>
-        <div class="card" style="border-top:3px solid var(--c-raf)">TCE/PB: <span id="t-tce">...</span></div>
-    </div>
-
-    <div style="margin-bottom:15px" id="filters">
-        <button class="f-pill active" onclick="filtrar('Todos', this)">TODOS</button>
-    </div>
     <div id="agenda-lista"></div>
 
 <script>
-const API = "https://script.google.com/macros/s/AKfycbwHMhqcltmxQil4TbSIejrc-cDbne5Q7Jlt8ZM_scAPaksUz1k-UE6GL72B1DKnO57v/exec";
-let d_bruto = null;
+    const API = "https://script.google.com/macros/s/AKfycbwHMhqcltmxQil4TbSIejrc-cDbne5Q7Jlt8ZM_scAPaksUz1k-UE6GL72B1DKnO57v/exec";
+    let d = null;
+    const CORES = {JOSINALDO:'var(--c-jos)', JULIANA:'var(--c-jul)', JULIANNE:'var(--c-jun)', RAFAELLE:'var(--c-raf)'};
 
-async function carregar() {
-    const r = await fetch(API);
-    d_bruto = await r.json();
-    
-    document.getElementById('t-total').innerText = d_bruto.total;
-    document.getElementById('t-prazo').innerText = d_bruto.comPrazo;
-    document.getElementById('t-jud').innerText = d_bruto.porTipo['JUDICIAL'] || 0;
-    document.getElementById('t-tce').innerText = d_bruto.porTipo['TCE'] || 0;
-    document.getElementById('sync').innerText = "Atualizado: " + d_bruto.geradoEm;
-
-    const fs = document.getElementById('filters');
-    ['JOSINALDO','JULIANA','JULIANNE','RAFAELLE'].forEach(a => {
-        fs.innerHTML += `<button class="f-pill" onclick="filtrar('${a}', this)">${a}</button>`;
-    });
-
-    filtrar('Todos');
-}
-
-function filtrar(adv, btn) {
-    if(btn) {
-        document.querySelectorAll('.f-pill').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
+    async function init() {
+        try {
+            const r = await fetch(API);
+            d = await r.json();
+            render();
+        } catch(e) { document.getElementById('sync').innerText = "Erro ao conectar com a planilha."; }
     }
-    const lista = document.getElementById('agenda-lista');
-    lista.innerHTML = '';
 
-    d_bruto.agenda.forEach(dia => {
-        let procs = [];
-        if(adv === 'Todos') Object.values(dia.advs).forEach(l => procs = procs.concat(l));
-        else procs = dia.advs[adv] || [];
-
-        if(procs.length > 0) {
-            const itens = procs.map(p => `
-                <div class="proc">
-                    <div style="font-weight:600;color:#fff">${p.nome}</div>
-                    <div style="font-size:11px;color:#8b92a8">${p.proc} | ${p.tipo}</div>
-                    <div style="font-size:11px;margin-top:5px;color:var(--c-jul)">Obs: ${p.obs}</div>
-                </div>`).join('');
-            
-            const dataF = dia.date.split('-').reverse().join('/');
-            lista.innerHTML += `
-                <div class="day-block">
-                    <div class="day-hdr" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">
-                        <span>${dataF}</span><span>${procs.length} ▾</span>
-                    </div>
-                    <div class="day-body">${itens}</div>
+    function render() {
+        document.getElementById('sync').innerText = "Última atualização: " + d.geradoEm;
+        const cards = document.getElementById('adv-cards');
+        const filters = document.getElementById('filters');
+        
+        Object.keys(CORES).forEach(adv => {
+            cards.innerHTML += `
+                <div class="adv-card" style="border-top-color:${CORES[adv]}">
+                    <span style="font-size:12px;color:#8b92a8">${adv}</span>
+                    <span class="val">${d.porAdv[adv] || 0}</span>
+                    <span style="font-size:11px;color:#555d72">Processos Ativos</span>
                 </div>`;
+            filters.innerHTML += `<button class="f-pill" onclick="filtrar('${adv}', this)" style="border-color:${CORES[adv]}44">${adv}</button>`;
+        });
+        filtrar('Todos');
+    }
+
+    function filtrar(quem, btn) {
+        if(btn) {
+            document.querySelectorAll('.f-pill').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
         }
-    });
-}
-carregar();
+        const lista = document.getElementById('agenda-lista');
+        lista.innerHTML = '';
+
+        d.agenda.forEach(dia => {
+            let procs = [];
+            if(quem === 'Todos') Object.values(dia.advs).forEach(l => procs = procs.concat(l));
+            else procs = dia.advs[quem] || [];
+
+            if(procs.length > 0) {
+                const dataFormatada = dia.date.split('-').reverse().join('/');
+                const htmlProcs = procs.map(p => `
+                    <div class="proc-row">
+                        <div style="font-weight:600;color:#fff">${p.nome}</div>
+                        <div style="font-size:11px;color:#8b92a8;margin:4px 0">${p.proc} | ${p.tipo}</div>
+                        <div style="font-size:11px;color:var(--c-jul)">Obs: ${p.obs}</div>
+                    </div>`).join('');
+
+                lista.innerHTML += `
+                    <div class="day-box">
+                        <div class="day-hdr" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">
+                            <span>${dataFormatada}</span>
+                            <span style="font-size:11px;color:#555d72">${procs.length} PROC. ▾</span>
+                        </div>
+                        <div class="day-content">${htmlProcs}</div>
+                    </div>`;
+            }
+        });
+    }
+    init();
 </script>
 </body>
 </html>
