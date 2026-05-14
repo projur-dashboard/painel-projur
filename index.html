@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PROJUR IPSEM | Dashboard Integrado</title>
+    <title>PROJUR IPSEM | Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -12,36 +12,37 @@
             --c-jos: #4f8ef7; --c-jul: #34d399; --c-jun: #a78bfa; --c-raf: #fb923c;
         }
         body { font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
-        .container { max-width: 1200px; margin: 0 auto; }
+        .container { max-width: 1100px; margin: 0 auto; }
         
         header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; border-bottom: 1px solid var(--border); margin-bottom: 30px; }
         .stats-main { font-size: 32px; font-weight: 600; color: var(--c-jul); }
 
-        /* VISÃO GERAL */
-        .section-title { font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 15px; display: block; }
-        .grid-overview { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; margin-bottom: 40px; }
+        /* VISÃO GERAL - SEMPRE VISÍVEL */
+        .section-title { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1.5px; margin: 30px 0 15px; display: block; font-weight: 600; }
+        .grid-overview { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; }
         .card-ov { background: var(--bg2); padding: 20px; border-radius: 10px; border: 1px solid var(--border); }
-        .card-ov span { display: block; }
-        .ov-val { font-size: 28px; font-weight: 600; margin-bottom: 5px; }
-        .ov-label { font-size: 11px; color: var(--text-dim); }
+        .ov-val { font-size: 32px; font-weight: 600; display: block; margin-bottom: 5px; color: #fff; }
+        .ov-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; }
 
-        /* DISTRIBUIÇÃO POR ADVOGADO */
-        .grid-advs { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 15px; margin-bottom: 40px; }
-        .adv-stat-box { background: var(--bg2); padding: 20px; border-radius: 10px; border-top: 4px solid #555; }
+        /* DISTRIBUIÇÃO - SEMPRE VISÍVEL */
+        .grid-advs { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; }
+        .adv-stat-box { background: var(--bg2); padding: 20px; border-radius: 10px; border-top: 4px solid #555; border-left: 1px solid var(--border); border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
         .adv-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .bar-bg { height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden; margin-bottom: 8px; }
+        .bar-bg { height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden; }
         .bar-fill { height: 100%; transition: width 1s; }
 
-        /* AGENDA (ACORDEÃO) */
+        /* AGENDA - RECOLHIDA (ACORDEÃO) */
         .day-group { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 10px; }
-        .day-hdr { padding: 15px 20px; display: flex; justify-content: space-between; cursor: pointer; }
-        .day-content { display: none; padding: 0 20px 20px; border-top: 1px solid var(--border); background: rgba(0,0,0,0.1); }
+        .day-hdr { padding: 15px 20px; display: flex; justify-content: space-between; cursor: pointer; transition: 0.2s; }
+        .day-hdr:hover { background: rgba(255,255,255,0.05); }
+        .day-content { display: none; padding: 0 20px 20px; border-top: 1px solid var(--border); }
+        
         .proc-card { padding: 15px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .proc-card:last-child { border-bottom: none; }
-        .badge { font-size: 9px; padding: 2px 6px; border-radius: 4px; color: #fff; margin-right: 8px; font-weight: 600; text-transform: uppercase; }
-        .obs-box { margin-top: 10px; padding: 8px; border-left: 2px solid var(--c-jul); background: rgba(52, 211, 153, 0.05); font-size: 13px; color: var(--c-jul); }
+        .badge { font-size: 9px; padding: 2px 6px; border-radius: 4px; color: #fff; margin-right: 8px; font-weight: 700; text-transform: uppercase; }
+        .obs-box { margin-top: 10px; padding: 10px; border-left: 3px solid var(--c-jul); background: rgba(52, 211, 153, 0.05); font-size: 13px; color: var(--c-jul); font-style: italic; }
 
-        #loading { text-align: center; margin-top: 100px; color: var(--text-dim); }
+        #loading { text-align: center; margin-top: 50px; color: var(--text-dim); }
     </style>
 </head>
 <body>
@@ -49,8 +50,8 @@
 <div class="container">
     <header>
         <div>
-            <h1 style="margin:0; font-size:22px">PROJUR Dashboard</h1>
-            <small id="upd" style="color:var(--text-dim)">Sincronizando dados...</small>
+            <h1 style="margin:0; font-size:24px">PROJUR Dashboard</h1>
+            <small id="upd" style="color:var(--text-dim)">Carregando...</small>
         </div>
         <div style="text-align:right">
             <span id="top-count" class="stats-main">0</span><br>
@@ -58,23 +59,20 @@
         </div>
     </header>
 
-    <div id="loading">Carregando painel de controle...</div>
-
-    <div id="main-content" style="display:none">
-        <span class="section-title">Visão Geral de Processos</span>
-        <div class="grid-overview">
-            <div class="card-ov"><span class="ov-val">465</span><span class="ov-label">Total de Processos</span></div>
-            <div class="card-ov"><span class="ov-val" id="ov-prazos">0</span><span class="ov-label">Com Prazos Registrados</span></div>
-            <div class="card-ov"><span class="ov-val">222</span><span class="ov-label">Processos Judiciais</span></div>
-            <div class="card-ov"><span class="ov-val">35</span><span class="ov-label">Processos TCE/PB</span></div>
-        </div>
-
-        <span class="section-title">Distribuição por Consultor</span>
-        <div class="grid-advs" id="adv-grid"></div>
-
-        <span class="section-title">Cronograma de Prazos</span>
-        <div id="agenda-lista"></div>
+    <span class="section-title">Visão Geral de Processos</span>
+    <div class="grid-overview">
+        <div class="card-ov"><span class="ov-val">465</span><span class="ov-label">Total de Processos</span></div>
+        <div class="card-ov"><span class="ov-val" id="ov-prazos" style="color:var(--c-jul)">0</span><span class="ov-label">Com Prazos</span></div>
+        <div class="card-ov"><span class="ov-val">222</span><span class="ov-label">Judiciais</span></div>
+        <div class="card-ov"><span class="ov-val">35</span><span class="ov-label">TCE/PB</span></div>
     </div>
+
+    <span class="section-title">Carga por Consultor</span>
+    <div class="grid-advs" id="adv-grid"></div>
+
+    <span class="section-title">Cronograma de Prazos (Clique para expandir)</span>
+    <div id="loading">Sincronizando com a planilha...</div>
+    <div id="agenda-lista"></div>
 </div>
 
 <script>
@@ -87,38 +85,37 @@
             const d = await res.json();
             
             document.getElementById('loading').style.display = 'none';
-            document.getElementById('main-content').style.display = 'block';
-            document.getElementById('upd').innerText = "Última sincronização: " + d.geradoEm;
+            document.getElementById('upd').innerText = "Atualizado em: " + d.geradoEm;
             document.getElementById('top-count').innerText = d.comPrazo;
             document.getElementById('ov-prazos').innerText = d.comPrazo;
 
-            // 1. Distribuição Advogados
+            // Renderizar Gráficos de Carga
             const advGrid = document.getElementById('adv-grid');
             Object.keys(CORES).forEach(adv => {
                 const total = d.porAdv[adv] || 0;
-                const perc = Math.min((total / 150) * 100, 100);
+                const perc = Math.min((total / 140) * 100, 100); // Base 140 para a barra
                 advGrid.innerHTML += `
                     <div class="adv-stat-box" style="border-top-color: ${CORES[adv]}">
                         <div class="adv-header"><strong>${adv}</strong><span style="color:${CORES[adv]}">${total}</span></div>
                         <div class="bar-bg"><div class="bar-fill" style="width:${perc}%; background:${CORES[adv]}"></div></div>
-                        <small style="font-size:10px; color:var(--text-dim)">PROCESSOS EM CARGA</small>
+                        <small style="font-size:10px; color:var(--text-dim)">PROCESSOS ATIVOS</small>
                     </div>`;
             });
 
-            // 2. Agenda de Prazos
+            // Renderizar Agenda Recolhida
             const lista = document.getElementById('agenda-lista');
             d.agenda.forEach(dia => {
                 const dataBR = dia.date.split('-').reverse().join('/');
-                let cards = "";
+                let cardsHtml = "";
                 let count = 0;
 
                 Object.keys(dia.advs).forEach(adv => {
                     dia.advs[adv].forEach(p => {
                         count++;
-                        cards += `
+                        cardsHtml += `
                             <div class="proc-card">
                                 <span class="badge" style="background:${CORES[adv]}">${adv}</span>
-                                <span style="font-weight:600; font-size:14px">${p.nome}</span>
+                                <span style="font-weight:600; font-size:14px; color:#fff">${p.nome}</span>
                                 <div style="font-size:12px; color:var(--text-dim); margin-top:4px">${p.proc} • ${p.tipo}</div>
                                 <div class="obs-box">${p.obs}</div>
                             </div>`;
@@ -129,19 +126,20 @@
                     <div class="day-group">
                         <div class="day-hdr" onclick="toggle(this)">
                             <span>📅 ${dataBR}</span>
-                            <span style="font-size:11px; opacity:0.6">${count} PRAZOS ▾</span>
+                            <span style="font-size:11px; font-weight:600; color:var(--c-jul)">${count} PRAZOS ▾</span>
                         </div>
-                        <div class="day-content">${cards}</div>
+                        <div class="day-content">${cardsHtml}</div>
                     </div>`;
             });
         } catch (e) {
-            document.getElementById('loading').innerText = "Erro ao conectar com a base de dados.";
+            document.getElementById('loading').innerText = "Erro ao carregar dados.";
         }
     }
 
     function toggle(el) {
         const content = el.nextElementSibling;
-        content.style.display = (content.style.display === 'block') ? 'none' : 'block';
+        const isVisible = content.style.display === 'block';
+        content.style.display = isVisible ? 'none' : 'block';
     }
 
     init();
