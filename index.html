@@ -1,87 +1,153 @@
-function doGet(e) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName("DADOS") || ss.getSheets()[0];
-  
-  SpreadsheetApp.flush();
-  var lastRow = sheet.getLastRow();
-  if (lastRow < 2) return ContentService.createTextOutput(JSON.stringify({"erro": "Vazia"})).setMimeType(ContentService.MimeType.JSON);
-  
-  // Lemos as colunas A até F (index 0 a 5)
-  var rows = sheet.getRange(2, 1, lastRow, 6).getValues();
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PROJUR IPSEM — Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f1117; --bg2: #161b27; --border: rgba(255,255,255,0.08);
+            --text: #e8eaf0; --text-dim: #8b92a8;
+            --c-jos: #4f8ef7; --c-jul: #34d399; --c-jun: #a78bfa; --c-raf: #fb923c;
+        }
+        body { font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+        .container { max-width: 1100px; margin: 0 auto; }
+        
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 1px solid var(--border); padding-bottom: 20px; }
+        .stats-count { font-size: 32px; font-weight: 600; color: var(--c-jul); display: block; }
+        
+        .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 40px; }
+        .card { background: var(--bg2); padding: 20px; border-radius: 12px; border: 1px solid var(--border); border-top: 4px solid #555; }
+        .card-num { font-size: 28px; font-weight: 600; display: block; margin-top: 5px; }
 
-  var dashboardData = {
-    "comPrazo": 0,
-    "geradoEm": Utilities.formatDate(new Date(), "GMT-3", "dd/MM/yyyy HH:mm"),
-    "porAdv": {"JOSINALDO":0, "JULIANA":0, "JULIANNE":0, "RAFAELLE":0},
-    "agenda": {}
-  };
+        .filters { display: flex; gap: 8px; margin-bottom: 25px; flex-wrap: wrap; }
+        .f-btn { background: var(--bg2); border: 1px solid var(--border); color: var(--text-dim); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 12px; }
+        .f-btn.active { background: var(--text); color: var(--bg); border-color: var(--text); font-weight: 600; }
 
-  rows.forEach(function(row) {
-    var advRaw = row[0] ? row[0].toString().trim().toUpperCase() : "";
-    if (!advRaw || advRaw.includes("RESPONSÁVEL")) return;
+        /* ESTILO DO ACORDEÃO (RECOLHIDO) */
+        .day-group { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 10px; overflow: hidden; }
+        .day-hdr { padding: 15px 20px; background: rgba(255,255,255,0.03); display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s; }
+        .day-hdr:hover { background: rgba(255,255,255,0.08); }
+        .day-hdr span:first-child { font-weight: 600; font-size: 16px; }
+        
+        /* CONTEÚDO OCULTO POR PADRÃO */
+        .day-content { display: none; padding: 10px 20px 20px; border-top: 1px solid var(--border); background: rgba(0,0,0,0.1); }
+        
+        .proc-card { padding: 15px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .proc-card:last-child { border-bottom: none; }
+        .badge { font-size: 9px; padding: 2px 6px; border-radius: 4px; color: #fff; margin-right: 8px; text-transform: uppercase; font-weight: 600; }
+        .proc-nome { font-weight: 600; color: #fff; font-size: 14px; display: block; margin-bottom: 4px; }
+        .proc-info { font-size: 12px; color: var(--text-dim); }
+        .proc-obs { font-size: 13px; color: var(--c-jul); margin-top: 10px; border-left: 3px solid var(--c-jul); padding-left: 12px; font-style: italic; }
+        
+        #loading { text-align: center; padding: 50px; color: var(--text-dim); }
+    </style>
+</head>
+<body>
 
-    var advogado = "OUTROS";
-    if (advRaw.includes("JOSINALDO")) advogado = "JOSINALDO";
-    else if (advRaw.includes("JULIANNE")) advogado = "JULIANNE";
-    else if (advRaw.includes("JULIANA")) advogado = "JULIANA";
-    else if (advRaw.includes("RAFAELLE")) advogado = "RAFAELLE";
+<div class="container">
+    <header>
+        <div>
+            <h1 style="margin:0; font-size:24px">Dashboard PROJUR</h1>
+            <span id="update-time" style="font-size:11px; color:var(--text-dim)">Sincronizando...</span>
+        </div>
+        <div style="text-align: right;">
+            <span id="top-prazos" class="stats-count">0</span>
+            <span style="font-size:10px; color:var(--text-dim); font-weight:600">PRAZOS ATIVOS</span>
+        </div>
+    </header>
 
-    if (advogado !== "OUTROS") {
-      dashboardData.porAdv[advogado] = (dashboardData.porAdv[advogado] || 0) + 1;
+    <div id="loading">Buscando dados da planilha...</div>
+
+    <div id="main-content" style="display:none">
+        <div class="metrics" id="adv-cards"></div>
+
+        <div class="agenda-section">
+            <h3 style="font-size:11px; color:var(--text-dim); text-transform:uppercase; margin-bottom:15px">Cronograma de Prazos</h3>
+            <div class="filters" id="filter-btns">
+                <button class="f-btn active" onclick="filtrar('Todos', this)">TODOS</button>
+            </div>
+            <div id="agenda-lista"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API = "https://script.google.com/macros/s/AKfycbwHMhqcltmxQil4TbSIejrc-cDbne5Q7Jlt8ZM_scAPaksUz1k-UE6GL72B1DKnO57v/exec?cache=" + new Date().getTime();
+    const CORES = { JOSINALDO: 'var(--c-jos)', JULIANA: 'var(--c-jul)', JULIANNE: 'var(--c-jun)', RAFAELLE: 'var(--c-raf)' };
+    let d = null;
+
+    async function init() {
+        try {
+            const res = await fetch(API);
+            d = await res.json();
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('main-content').style.display = 'block';
+            document.getElementById('update-time').innerText = "Última atualização: " + d.geradoEm;
+            document.getElementById('top-prazos').innerText = d.comPrazo;
+
+            const cards = document.getElementById('adv-cards');
+            const btns = document.getElementById('filter-btns');
+            Object.keys(CORES).forEach(adv => {
+                cards.innerHTML += `
+                    <div class="card" style="border-top-color: ${CORES[adv]}">
+                        <span style="font-size:11px; color:var(--text-dim); font-weight:600;">${adv}</span>
+                        <span class="card-num">${d.porAdv[adv] || 0}</span>
+                    </div>`;
+                btns.innerHTML += `<button class="f-btn" onclick="filtrar('${adv}', this)">${adv}</button>`;
+            });
+            filtrar('Todos');
+        } catch (e) { document.getElementById('loading').innerText = "Erro na conexão."; }
     }
 
-    var tipo = row[1] ? row[1].toString().trim() : "";
-    var nome = row[2] ? row[2].toString().trim() : "";
-    var proc = row[3] ? row[3].toString().trim() : "";
-    
-    // --- LÓGICA ESPECÍFICA PARA A COLUNA F ---
-    var colE = row[4]; // Data com ano (referência)
-    var colF = row[5] ? row[5].toString().trim() : ""; // "04/02 - recurso"
-    
-    var dataFinal = null;
-    var anoReferencia = 2026; // Padrão caso falhe
+    function filtrar(quem, btn) {
+        if (btn) {
+            document.querySelectorAll('.f-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add(active);
+        }
+        const lista = document.getElementById('agenda-lista');
+        lista.innerHTML = '';
 
-    // Tenta extrair o ano da Coluna E
-    if (colE instanceof Date && !isNaN(colE.getTime())) {
-      anoReferencia = colE.getFullYear();
+        d.agenda.forEach(dia => {
+            let procs = [];
+            if (quem === 'Todos') {
+                Object.keys(dia.advs).forEach(key => {
+                    dia.advs[key].forEach(p => procs.push({ ...p, adv: key }));
+                });
+            } else {
+                (dia.advs[quem] || []).forEach(p => procs.push({ ...p, adv: quem }));
+            }
+
+            if (procs.length > 0) {
+                const dataBR = dia.date.split('-').reverse().join('/');
+                const itens = procs.map(p => `
+                    <div class="proc-card">
+                        <span class="badge" style="background:${CORES[p.adv] || '#555'}">${p.adv}</span>
+                        <span class="proc-nome">${p.nome}</span>
+                        <div class="proc-info">Proc: ${p.proc} • ${p.tipo}</div>
+                        <div class="proc-obs">${p.obs}</div>
+                    </div>`).join('');
+
+                lista.innerHTML += `
+                    <div class="day-group">
+                        <div class="day-hdr" onclick="toggle(this)">
+                            <span>📅 ${dataBR}</span>
+                            <span style="font-size:11px; opacity:0.6">${procs.length} PRAZOS ▾</span>
+                        </div>
+                        <div class="day-content">${itens}</div>
+                    </div>`;
+            }
+        });
     }
 
-    // Procura o padrão DD/MM no início ou meio da Coluna F
-    var matchF = colF.match(/(\d{1,2})[\/\-](\d{1,2})/);
-    
-    if (matchF) {
-      var dia = parseInt(matchF[1], 10);
-      var mes = parseInt(matchF[2], 10) - 1; // Meses no JS são 0-11
-      
-      var dTemp = new Date(anoReferencia, mes, dia);
-      
-      if (!isNaN(dTemp.getTime())) {
-        dataFinal = dTemp;
-      }
+    function toggle(el) {
+        const content = el.nextElementSibling;
+        const isVisible = content.style.display === 'block';
+        content.style.display = isVisible ? 'none' : 'block';
     }
 
-    if (dataFinal) {
-      dashboardData.comPrazo++;
-      var key = Utilities.formatDate(dataFinal, "GMT-3", "yyyy-MM-dd");
-      
-      if (!dashboardData.agenda[key]) dashboardData.agenda[key] = {};
-      if (!dashboardData.agenda[key][advogado]) dashboardData.agenda[key][advogado] = [];
-      
-      dashboardData.agenda[key][advogado].push({
-        nome: nome,
-        proc: proc,
-        tipo: tipo,
-        obs: colF // Mostra o texto completo: "04/02 - recurso"
-      });
-    }
-  });
-
-  // Ordenar agenda por data
-  var sortedKeys = Object.keys(dashboardData.agenda).sort();
-  var sortedAgenda = sortedKeys.map(function(k) {
-    return { date: k, advs: dashboardData.agenda[k] };
-  });
-  dashboardData.agenda = sortedAgenda;
-
-  return ContentService.createTextOutput(JSON.stringify(dashboardData)).setMimeType(ContentService.MimeType.JSON);
-}
+    init();
+</script>
+</body>
+</html>
