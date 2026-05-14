@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PROJUR IPSEM — Dashboard</title>
+    <title>PROJUR IPSEM — Oficial</title>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -36,7 +36,8 @@
         .proc-info { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
         .proc-obs { font-size: 12px; color: var(--c-jul); margin-top: 8px; border-left: 2px solid var(--c-jul); padding-left: 10px; }
         
-        #loading { text-align: center; padding: 50px; color: var(--text-dim); font-size: 14px; }
+        #loading { text-align: center; padding: 40px; background: var(--bg2); border-radius: 12px; border: 1px solid var(--border); }
+        #debug-log { color: #fb923c; font-size: 12px; margin-top: 10px; font-family: monospace; word-break: break-all; }
     </style>
 </head>
 <body>
@@ -45,23 +46,26 @@
     <header>
         <div>
             <h1 style="margin:0; font-size:24px">Dashboard PROJUR</h1>
-            <span id="update-time" style="font-size:11px; color:var(--text-dim)">Sincronizando dados...</span>
+            <span id="update-time" style="font-size:11px; color:var(--text-dim)">Aguardando conexão com Google...</span>
         </div>
         <div style="text-align: right;">
-            <span id="top-prazos" class="stats-count">0</span>
+            <span id="top-prazos" class="stats-count">-</span>
             <span style="font-size:10px; color:var(--text-dim); font-weight:600">PRAZOS ATIVOS</span>
         </div>
     </header>
 
-    <div id="loading">Carregando informações da planilha...</div>
+    <div id="loading">
+        <strong id="loading-msg">Carregando painel de processos...</strong>
+        <div id="debug-log"></div>
+    </div>
 
     <div id="main-content" style="display:none">
         <div class="metrics" id="adv-cards"></div>
 
         <div class="agenda-section">
-            <h3 style="font-size:12px; color:var(--text-dim); text-transform:uppercase; margin-bottom:20px">Agenda de Prazos (2026)</h3>
+            <h3 style="font-size:12px; color:var(--text-dim); text-transform:uppercase; margin-bottom:20px">Agenda Integral</h3>
             <div class="filters" id="filter-btns">
-                <button class="f-btn active" onclick="filtrar('Todos', this)">TODOS</button>
+                <button class="f-btn active" onclick="filtrar('Todos', this)">TODOS OS PRAZOS</button>
             </div>
             <div id="agenda-lista"></div>
         </div>
@@ -69,16 +73,36 @@
 </div>
 
 <script>
-    // URL da sua API com um "carimbo" de tempo para evitar cache
-    const API = "https://script.google.com/macros/s/AKfycbwHMhqcltmxQil4TbSIejrc-cDbne5Q7Jlt8ZM_scAPaksUz1k-UE6GL72B1DKnO57v/exec?v=" + new Date().getTime();
+    // URL limpa, sem parâmetros para não quebrar o CORS do Google
+    const API = "https://script.google.com/macros/s/AKfycbwHMhqcltmxQil4TbSIejrc-cDbne5Q7Jlt8ZM_scAPaksUz1k-UE6GL72B1DKnO57v/exec";
     const CORES = { JOSINALDO: 'var(--c-jos)', JULIANA: 'var(--c-jul)', JULIANNE: 'var(--c-jun)', RAFAELLE: 'var(--c-raf)' };
     let d = null;
 
+    function logErro(msg) {
+        document.getElementById('loading-msg').innerText = "Ocorreu um erro ao carregar os dados.";
+        document.getElementById('loading-msg').style.color = "#fb923c";
+        document.getElementById('debug-log').innerText = msg;
+    }
+
     async function init() {
         try {
+            document.getElementById('debug-log').innerText = "Iniciando Fetch...";
             const res = await fetch(API);
-            d = await res.json();
             
+            if (!res.ok) throw new Error("Falha HTTP: " + res.status);
+            
+            document.getElementById('debug-log').innerText = "Dados recebidos, interpretando...";
+            const texto = await res.text();
+            
+            try {
+                d = JSON.parse(texto);
+            } catch (jsonErr) {
+                throw new Error("A API não enviou um JSON. Enviou: " + texto.substring(0, 80) + "...");
+            }
+
+            // Se chegou aqui, os dados são válidos
+            if (!d || typeof d.comPrazo === 'undefined') throw new Error("JSON recebido está vazio ou incorreto.");
+
             document.getElementById('loading').style.display = 'none';
             document.getElementById('main-content').style.display = 'block';
             document.getElementById('update-time').innerText = "Última atualização: " + d.geradoEm;
@@ -88,18 +112,21 @@
             const btns = document.getElementById('filter-btns');
 
             Object.keys(CORES).forEach(adv => {
+                const total = (d.porAdv && d.porAdv[adv]) ? d.porAdv[adv] : 0;
                 cards.innerHTML += `
                     <div class="card" style="border-top-color: ${CORES[adv]}">
                         <span style="font-size:11px; color:var(--text-dim); font-weight:600;">${adv}</span>
-                        <span class="card-num">${d.porAdv[adv] || 0}</span>
+                        <span class="card-num">${total}</span>
                     </div>
                 `;
                 btns.innerHTML += `<button class="f-btn" onclick="filtrar('${adv}', this)">${adv}</button>`;
             });
 
             filtrar('Todos');
+
         } catch (e) {
-            document.getElementById('loading').innerText = "Erro ao conectar com a API do Google.";
+            console.error("Erro Master:", e);
+            logErro(e.message);
         }
     }
 
@@ -112,24 +139,32 @@
         const lista = document.getElementById('agenda-lista');
         lista.innerHTML = '';
 
+        if (!d.agenda || !Array.isArray(d.agenda)) return;
+
         d.agenda.forEach(dia => {
             let procs = [];
             if (quem === 'Todos') {
-                Object.keys(dia.advs).forEach(key => {
-                    dia.advs[key].forEach(p => procs.push({ ...p, adv: key }));
-                });
+                if (dia.advs) {
+                    Object.keys(dia.advs).forEach(key => {
+                        if (Array.isArray(dia.advs[key])) {
+                            dia.advs[key].forEach(p => procs.push({ ...p, adv: key }));
+                        }
+                    });
+                }
             } else {
-                (dia.advs[quem] || []).forEach(p => procs.push({ ...p, adv: quem }));
+                if (dia.advs && Array.isArray(dia.advs[quem])) {
+                    dia.advs[quem].forEach(p => procs.push({ ...p, adv: quem }));
+                }
             }
 
             if (procs.length > 0) {
-                const dataBR = dia.date.split('-').reverse().join('/');
+                const dataBR = dia.date ? dia.date.split('-').reverse().join('/') : 'Data Inválida';
                 const itens = procs.map(p => `
                     <div class="proc-card">
                         <span class="badge" style="background:${CORES[p.adv] || '#555'}">${p.adv}</span>
-                        <span class="proc-nome">${p.nome}</span>
-                        <div class="proc-info">${p.proc} • ${p.tipo}</div>
-                        <div class="proc-obs">⏱ ${p.obs}</div>
+                        <span class="proc-nome">${p.nome || 'Sem Nome'}</span>
+                        <div class="proc-info">${p.proc || '-'} • ${p.tipo || '-'}</div>
+                        <div class="proc-obs">⏱ ${p.obs || ''}</div>
                     </div>
                 `).join('');
 
@@ -137,7 +172,7 @@
                     <div class="day-group">
                         <div class="day-hdr" onclick="toggle(this)">
                             <span>${dataBR}</span>
-                            <span style="font-size:11px; opacity:0.6">${procs.length} PRAZOS ▾</span>
+                            <span style="font-size:11px; color:var(--text-dim);">${procs.length} PRAZOS ▾</span>
                         </div>
                         <div class="day-content" style="display:block">${itens}</div>
                     </div>`;
@@ -150,6 +185,7 @@
         c.style.display = (c.style.display === 'none') ? 'block' : 'none';
     }
 
+    // Dispara a função
     init();
 </script>
 </body>
