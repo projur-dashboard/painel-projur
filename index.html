@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PROJUR IPSEM — Oficial</title>
+    <title>PROJUR IPSEM — Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -11,33 +11,34 @@
             --text: #e8eaf0; --text-dim: #8b92a8;
             --c-jos: #4f8ef7; --c-jul: #34d399; --c-jun: #a78bfa; --c-raf: #fb923c;
         }
-        body { font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+        body { font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; line-height: 1.5; }
         .container { max-width: 1100px; margin: 0 auto; }
         
         header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
-        .stats-count { font-size: 32px; font-weight: 600; color: var(--c-jul); display: block; }
+        .stats-main { text-align: right; }
+        .stats-count { font-size: 36px; font-weight: 600; color: var(--c-jul); display: block; }
         
         .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 40px; }
         .card { background: var(--bg2); padding: 20px; border-radius: 12px; border: 1px solid var(--border); border-top: 4px solid #555; }
+        .card-name { font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 600; letter-spacing: 1px; }
         .card-num { font-size: 28px; font-weight: 600; display: block; margin-top: 5px; }
 
-        .filters { display: flex; gap: 8px; margin-bottom: 25px; flex-wrap: wrap; }
-        .f-btn { background: var(--bg2); border: 1px solid var(--border); color: var(--text-dim); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 12px; transition: 0.2s; }
+        .filters { display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; }
+        .f-btn { background: var(--bg2); border: 1px solid var(--border); color: var(--text-dim); padding: 8px 18px; border-radius: 20px; cursor: pointer; font-size: 12px; transition: 0.2s; }
         .f-btn.active { background: var(--text); color: var(--bg); border-color: var(--text); font-weight: 600; }
 
-        .day-group { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 10px; overflow: hidden; }
-        .day-hdr { padding: 15px 20px; background: rgba(255,255,255,0.02); display: flex; justify-content: space-between; cursor: pointer; }
-        .day-content { padding: 5px 20px 15px; border-top: 1px solid var(--border); }
+        .day-group { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 15px; overflow: hidden; }
+        .day-hdr { padding: 15px 20px; background: rgba(255,255,255,0.02); display: flex; justify-content: space-between; cursor: pointer; font-weight: 600; border-bottom: 1px solid var(--border); }
+        .day-content { padding: 10px 20px; }
         
-        .proc-card { padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .proc-card { padding: 15px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .proc-card:last-child { border-bottom: none; }
-        .badge { font-size: 9px; padding: 2px 6px; border-radius: 4px; color: #fff; margin-right: 8px; text-transform: uppercase; font-weight: 600; }
-        .proc-nome { font-weight: 600; color: #fff; font-size: 14px; }
-        .proc-info { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
-        .proc-obs { font-size: 12px; color: var(--c-jul); margin-top: 8px; border-left: 2px solid var(--c-jul); padding-left: 10px; }
+        .badge { font-size: 10px; padding: 2px 8px; border-radius: 4px; color: #fff; margin-right: 10px; font-weight: 600; text-transform: uppercase; }
+        .proc-nome { font-weight: 600; color: #fff; font-size: 15px; display: block; margin-bottom: 4px; }
+        .proc-info { font-size: 12px; color: var(--text-dim); }
+        .proc-obs { font-size: 13px; color: var(--c-jul); margin-top: 10px; border-left: 3px solid var(--c-jul); padding-left: 12px; font-style: italic; }
         
-        #loading { text-align: center; padding: 40px; background: var(--bg2); border-radius: 12px; border: 1px solid var(--border); }
-        #debug-log { color: #fb923c; font-size: 12px; margin-top: 10px; font-family: monospace; word-break: break-all; }
+        #loading { text-align: center; padding: 100px 20px; color: var(--text-dim); }
     </style>
 </head>
 <body>
@@ -45,25 +46,22 @@
 <div class="container">
     <header>
         <div>
-            <h1 style="margin:0; font-size:24px">Dashboard PROJUR</h1>
-            <span id="update-time" style="font-size:11px; color:var(--text-dim)">Aguardando conexão com Google...</span>
+            <h1 style="margin:0; font-size:26px; letter-spacing:-1px">Dashboard PROJUR</h1>
+            <span id="update-time" style="font-size:12px; color:var(--text-dim)">Sincronizando planilha...</span>
         </div>
-        <div style="text-align: right;">
-            <span id="top-prazos" class="stats-count">-</span>
-            <span style="font-size:10px; color:var(--text-dim); font-weight:600">PRAZOS ATIVOS</span>
+        <div class="stats-main">
+            <span id="top-prazos" class="stats-count">0</span>
+            <span style="font-size:10px; color:var(--text-dim); font-weight:600; letter-spacing:1px">PRAZOS ATIVOS</span>
         </div>
     </header>
 
-    <div id="loading">
-        <strong id="loading-msg">Carregando painel de processos...</strong>
-        <div id="debug-log"></div>
-    </div>
+    <div id="loading">Sincronizando com Google Sheets...</div>
 
     <div id="main-content" style="display:none">
         <div class="metrics" id="adv-cards"></div>
 
         <div class="agenda-section">
-            <h3 style="font-size:12px; color:var(--text-dim); text-transform:uppercase; margin-bottom:20px">Agenda Integral</h3>
+            <h3 style="font-size:12px; color:var(--text-dim); text-transform:uppercase; margin-bottom:20px; letter-spacing:1px">Agenda de Prazos</h3>
             <div class="filters" id="filter-btns">
                 <button class="f-btn active" onclick="filtrar('Todos', this)">TODOS OS PRAZOS</button>
             </div>
@@ -73,49 +71,31 @@
 </div>
 
 <script>
-    // URL limpa, sem parâmetros para não quebrar o CORS do Google
-    const API = "https://script.google.com/macros/s/AKfycbwHMhqcltmxQil4TbSIejrc-cDbne5Q7Jlt8ZM_scAPaksUz1k-UE6GL72B1DKnO57v/exec";
+    // URL da sua API - O Math.random() força o navegador a buscar dados novos sempre
+    const API_BASE = "https://script.google.com/macros/s/AKfycbwHMhqcltmxQil4TbSIejrc-cDbne5Q7Jlt8ZM_scAPaksUz1k-UE6GL72B1DKnO57v/exec";
+    const API = API_BASE + "?nocache=" + Math.random();
+    
     const CORES = { JOSINALDO: 'var(--c-jos)', JULIANA: 'var(--c-jul)', JULIANNE: 'var(--c-jun)', RAFAELLE: 'var(--c-raf)' };
     let d = null;
 
-    function logErro(msg) {
-        document.getElementById('loading-msg').innerText = "Ocorreu um erro ao carregar os dados.";
-        document.getElementById('loading-msg').style.color = "#fb923c";
-        document.getElementById('debug-log').innerText = msg;
-    }
-
     async function init() {
         try {
-            document.getElementById('debug-log').innerText = "Iniciando Fetch...";
             const res = await fetch(API);
+            d = await res.json();
             
-            if (!res.ok) throw new Error("Falha HTTP: " + res.status);
-            
-            document.getElementById('debug-log').innerText = "Dados recebidos, interpretando...";
-            const texto = await res.text();
-            
-            try {
-                d = JSON.parse(texto);
-            } catch (jsonErr) {
-                throw new Error("A API não enviou um JSON. Enviou: " + texto.substring(0, 80) + "...");
-            }
-
-            // Se chegou aqui, os dados são válidos
-            if (!d || typeof d.comPrazo === 'undefined') throw new Error("JSON recebido está vazio ou incorreto.");
-
             document.getElementById('loading').style.display = 'none';
             document.getElementById('main-content').style.display = 'block';
-            document.getElementById('update-time').innerText = "Última atualização: " + d.geradoEm;
+            document.getElementById('update-time').innerText = "Última sincronização: " + d.geradoEm;
             document.getElementById('top-prazos').innerText = d.comPrazo;
 
             const cards = document.getElementById('adv-cards');
             const btns = document.getElementById('filter-btns');
 
             Object.keys(CORES).forEach(adv => {
-                const total = (d.porAdv && d.porAdv[adv]) ? d.porAdv[adv] : 0;
+                const total = d.porAdv[adv] || 0;
                 cards.innerHTML += `
                     <div class="card" style="border-top-color: ${CORES[adv]}">
-                        <span style="font-size:11px; color:var(--text-dim); font-weight:600;">${adv}</span>
+                        <span class="card-name">${adv}</span>
                         <span class="card-num">${total}</span>
                     </div>
                 `;
@@ -123,10 +103,8 @@
             });
 
             filtrar('Todos');
-
         } catch (e) {
-            console.error("Erro Master:", e);
-            logErro(e.message);
+            document.getElementById('loading').innerHTML = "Erro ao carregar dados do Google.<br><small style='color:orange'>Verifique se a implantação do Script está como 'Qualquer Pessoa'.</small>";
         }
     }
 
@@ -139,32 +117,24 @@
         const lista = document.getElementById('agenda-lista');
         lista.innerHTML = '';
 
-        if (!d.agenda || !Array.isArray(d.agenda)) return;
-
         d.agenda.forEach(dia => {
             let procs = [];
             if (quem === 'Todos') {
-                if (dia.advs) {
-                    Object.keys(dia.advs).forEach(key => {
-                        if (Array.isArray(dia.advs[key])) {
-                            dia.advs[key].forEach(p => procs.push({ ...p, adv: key }));
-                        }
-                    });
-                }
+                Object.keys(dia.advs).forEach(key => {
+                    dia.advs[key].forEach(p => procs.push({ ...p, adv: key }));
+                });
             } else {
-                if (dia.advs && Array.isArray(dia.advs[quem])) {
-                    dia.advs[quem].forEach(p => procs.push({ ...p, adv: quem }));
-                }
+                (dia.advs[quem] || []).forEach(p => procs.push({ ...p, adv: quem }));
             }
 
             if (procs.length > 0) {
-                const dataBR = dia.date ? dia.date.split('-').reverse().join('/') : 'Data Inválida';
+                const dataBR = dia.date.split('-').reverse().join('/');
                 const itens = procs.map(p => `
                     <div class="proc-card">
                         <span class="badge" style="background:${CORES[p.adv] || '#555'}">${p.adv}</span>
-                        <span class="proc-nome">${p.nome || 'Sem Nome'}</span>
-                        <div class="proc-info">${p.proc || '-'} • ${p.tipo || '-'}</div>
-                        <div class="proc-obs">⏱ ${p.obs || ''}</div>
+                        <span class="proc-nome">${p.nome}</span>
+                        <div class="proc-info">${p.proc} • ${p.tipo}</div>
+                        <div class="proc-obs">⏱ ${p.obs}</div>
                     </div>
                 `).join('');
 
@@ -172,7 +142,7 @@
                     <div class="day-group">
                         <div class="day-hdr" onclick="toggle(this)">
                             <span>${dataBR}</span>
-                            <span style="font-size:11px; color:var(--text-dim);">${procs.length} PRAZOS ▾</span>
+                            <span style="font-size:11px; opacity:0.6">${procs.length} PRAZOS ▾</span>
                         </div>
                         <div class="day-content" style="display:block">${itens}</div>
                     </div>`;
@@ -185,7 +155,6 @@
         c.style.display = (c.style.display === 'none') ? 'block' : 'none';
     }
 
-    // Dispara a função
     init();
 </script>
 </body>
