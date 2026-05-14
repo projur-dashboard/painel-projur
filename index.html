@@ -38,8 +38,8 @@ main{padding:24px 28px;max-width:1280px;margin:0 auto}
 .fpill{border:1px solid var(--border2);border-radius:20px;padding:4px 13px;font-size:12px;cursor:pointer;background:transparent;color:var(--text2);transition:all .15s}
 .fpill.active{background:var(--text);color:var(--bg);border-color:var(--text)}
 .day-block{background:var(--bg2);border:1px solid var(--border);border-radius:10px;margin-bottom:7px;overflow:hidden}
-.day-hdr{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;transition: background 0.2s;}
-.day-hdr:hover{background: var(--bg3);}
+.day-hdr{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;transition:background 0.2s}
+.day-hdr:hover{background:var(--bg3)}
 .dd-date{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text2);min-width:86px}
 .dd-name{font-size:12px;color:var(--text3);flex:1}
 .badge{font-size:10px;font-weight:500;padding:2px 8px;border-radius:20px;font-family:'IBM Plex Mono',monospace}
@@ -78,40 +78,40 @@ main{padding:24px 28px;max-width:1280px;margin:0 auto}
 <main>
   <div class="slabel">Visão Geral</div>
   <div class="metrics-row">
-    <div class="metric m-blue"><div class="metric-lbl">Base de Processos</div><div class="metric-val" id="m-total">---</div><div class="metric-sub">Total catalogado</div></div>
-    <div class="metric m-green"><div class="metric-lbl">Prazos Identificados</div><div class="metric-val" id="m-prazo">---</div><div class="metric-sub" id="m-sub-prazo">---</div></div>
+    <div class="metric m-blue"><div class="metric-lbl">Base Total</div><div class="metric-val" id="m-total">---</div><div class="metric-sub">Processos catalogados</div></div>
+    <div class="metric m-green"><div class="metric-lbl">Prazos Ativos</div><div class="metric-val" id="m-prazo">---</div><div class="metric-sub" id="m-sub-prazo">---</div></div>
     <div class="metric m-purple"><div class="metric-lbl">Judiciais</div><div class="metric-val" id="m-jud">---</div><div class="metric-sub" id="m-sub-jud">---</div></div>
-    <div class="metric m-orange"><div class="metric-lbl">TCE e Outros</div><div class="metric-val" id="m-tce">---</div><div class="metric-sub">Administrativos</div></div>
+    <div class="metric m-orange"><div class="metric-lbl">Outros/TCE</div><div class="metric-val" id="m-tce">---</div><div class="metric-sub">Administrativos</div></div>
   </div>
 
   <div class="slabel">Carga por Consultor</div>
   <div class="adv-row" id="adv-cards"></div>
 
-  <div class="slabel">Distribuição Analítica</div>
+  <div class="slabel">Análise de Dados</div>
   <div class="charts-row">
     <div class="chart-card">
-      <div class="chart-title">Processos por Categoria</div>
+      <div class="chart-title">Processos por Tipo</div>
       <div style="position:relative;height:250px"><canvas id="chart-tipo"></canvas></div>
     </div>
     <div class="chart-card">
-      <div class="chart-title">Pico de Atividade (2026)</div>
+      <div class="chart-title">Pico de Atividade</div>
       <div style="position:relative;height:250px"><canvas id="chart-mes"></canvas></div>
     </div>
   </div>
 
-  <div class="slabel">Agenda de Prazos Futuros</div>
+  <div class="slabel">Agenda de Prazos (Hoje em diante)</div>
   <div class="afilters">
     <button class="fpill active" onclick="setFilter('todos',this)">Todos</button>
-    <button class="fpill" onclick="setFilter('JOSINALDO',this)" style="border-color:var(--c-jos)">Josinaldo</button>
-    <button class="fpill" onclick="setFilter('JULIANA',this)" style="border-color:var(--c-jul)">Juliana</button>
-    <button class="fpill" onclick="setFilter('JULIANNE',this)" style="border-color:var(--c-jun)">Julianne</button>
-    <button class="fpill" onclick="setFilter('RAFAELLE',this)" style="border-color:var(--c-raf)">Rafaelle</button>
+    <button class="fpill" onclick="setFilter('JOSINALDO',this)">Josinaldo</button>
+    <button class="fpill" onclick="setFilter('JULIANA',this)">Juliana</button>
+    <button class="fpill" onclick="setFilter('JULIANNE',this)">Julianne</button>
+    <button class="fpill" onclick="setFilter('RAFAELLE',this)">Rafaelle</button>
   </div>
   <div id="agenda-container"></div>
 </main>
 
 <script>
-// URL DEFINIDA POR VOCÊ
+// URL JÁ CONFIGURADA COM O SEU SCRIPT
 const API_URL = "https://script.google.com/macros/s/AKfycbwHMhqcltmxQil4TbSIejrc-cDbne5Q7Jlt8ZM_scAPaksUz1k-UE6GL72B1DKnO57v/exec"; 
 const ADV_COLORS = {JOSINALDO:'#4f8ef7', JULIANA:'#34d399', JULIANNE:'#a78bfa', RAFAELLE:'#fb923c'};
 
@@ -123,27 +123,26 @@ async function init() {
     try {
         const response = await fetch(API_URL + "?t=" + new Date().getTime());
         DATA = await response.json();
+        if(DATA.erro) throw new Error(DATA.erro);
         document.getElementById('loading-overlay').style.display = 'none';
         renderDashboard();
     } catch (e) {
-        document.getElementById('loading-overlay').innerHTML = "Erro de conexão.<br>Verifique se o Script foi publicado como 'Qualquer Pessoa'.";
+        document.getElementById('loading-overlay').innerHTML = "Erro ao carregar dados.<br>Certifique-se de que a implantação está como 'Qualquer pessoa'.";
     }
 }
 
 function renderDashboard() {
     document.getElementById('last-update').textContent = 'Sincronizado: ' + DATA.geradoEm;
-    document.getElementById('data-badge').textContent = DATA.comPrazo + ' prazos ativos';
+    document.getElementById('data-badge').textContent = DATA.total + ' processos na base';
     
-    // Supondo total fixo de 465 processos conforme layout
-    const totalGeral = 465;
-    document.getElementById('m-total').textContent = totalGeral;
+    document.getElementById('m-total').textContent = DATA.total;
     document.getElementById('m-prazo').textContent = DATA.comPrazo;
-    document.getElementById('m-sub-prazo').textContent = Math.round((DATA.comPrazo/totalGeral)*100) + '% da carga';
+    document.getElementById('m-sub-prazo').textContent = Math.round((DATA.comPrazo/DATA.total)*100) + '% da base';
     
     const jud = DATA.porTipo['Judicial'] || 0;
     document.getElementById('m-jud').textContent = jud;
-    document.getElementById('m-sub-jud').textContent = Math.round((jud/totalGeral)*100) + '% da carga';
-    document.getElementById('m-tce').textContent = (DATA.porTipo['TCE'] || 0) + (DATA.porTipo['CTC'] || 0);
+    document.getElementById('m-sub-jud').textContent = Math.round((jud/DATA.total)*100) + '% da base';
+    document.getElementById('m-tce').textContent = (DATA.porTipo['TCE'] || 0) + (DATA.porTipo['CTC'] || 0) + (DATA.porTipo['Administrativo'] || 0);
 
     const ac = document.getElementById('adv-cards');
     ac.innerHTML = '';
@@ -151,10 +150,10 @@ function renderDashboard() {
         const count = DATA.porAdv[adv] || 0;
         const color = ADV_COLORS[adv];
         ac.innerHTML += `
-            <div class="adv-card" style="border-top: 2px solid ${color}">
+            <div class="adv-card" style="border-top: 3px solid ${color}">
                 <div class="adv-name"><span class="adv-dot" style="background:${color}"></span>${adv}</div>
                 <div class="adv-n">${count}</div>
-                <div class="adv-nsub">processos</div>
+                <div class="adv-nsub">processos ativos</div>
             </div>`;
     });
 
@@ -178,7 +177,7 @@ function renderCharts() {
         type: 'line',
         data: {
             labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai'],
-            datasets: [{ data: [46, 121, 158, 96, 42], borderColor: '#34d399', backgroundColor: 'rgba(52,211,153,0.1)', fill: true, tension: 0.4 }]
+            datasets: [{ data: [46, 121, 158, 96, DATA.comPrazo], borderColor: '#34d399', tension: 0.4, fill: false }]
         },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
     });
@@ -201,9 +200,9 @@ function renderAgenda() {
             <div class="day-block">
                 <div class="day-hdr" onclick="toggleDay('${item.date}')">
                     <span class="dd-date">${dataBR}</span>
-                    <span class="dd-name">Agenda de Prazos</span>
+                    <span class="dd-name">Prazos Agendados</span>
                     <span class="badge b-normal">${total} proc.</span>
-                    <span style="font-size:10px">${isOpen ? '▲' : '▼'}</span>
+                    <span>${isOpen ? '▲' : '▼'}</span>
                 </div>
                 <div class="day-body ${isOpen ? 'open' : ''}">
         `;
@@ -220,4 +219,31 @@ function renderAgenda() {
                         ${procs.map(p => `
                             <div class="proc-item">
                                 <div class="proc-nome">${p.nome}</div>
-                                <div class="proc-
+                                <div class="proc-meta"><span class="proc-num">${p.proc}</span> <span class="ttag">${p.tipo}</span></div>
+                                <div style="font-size:11px; color:var(--c-jul); margin-top:4px">⏱ Obs: ${p.obs}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>`;
+        });
+        html += `</div></div>`;
+    });
+    container.innerHTML = html || '<div style="padding:20px; color:var(--text3)">Nenhum prazo futuro para este filtro.</div>';
+}
+
+function toggleDay(date) {
+    if(openDays.has(date)) openDays.delete(date); else openDays.add(date);
+    renderAgenda();
+}
+
+function setFilter(val, el) {
+    activeFilter = val;
+    document.querySelectorAll('.fpill').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+    renderAgenda();
+}
+
+init();
+</script>
+</body>
+</html>
