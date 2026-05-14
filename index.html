@@ -2,69 +2,64 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>PROJUR IPSEM — Dashboard 2026</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PROJUR IPSEM — Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root{--bg:#0f1117;--bg2:#161b27;--border:rgba(255,255,255,0.07);--text:#e8eaf0;--c-jos:#4f8ef7;--c-jul:#34d399;--c-jun:#a78bfa;--c-raf:#fb923c}
         body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);margin:0;padding:24px}
-        .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px}
-        .adv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:15px;margin-bottom:40px}
-        .adv-card{background:var(--bg2);padding:24px;border-radius:12px;border:1px solid var(--border);border-top:4px solid #fff}
-        .val{font-size:38px;font-weight:600;display:block;margin:10px 0}
-        .f-pill{background:transparent;border:1px solid var(--border);color:#8b92a8;padding:10px 20px;border-radius:30px;cursor:pointer;margin-right:8px;transition:0.2s}
-        .f-pill.active{background:var(--text);color:var(--bg);border-color:var(--text)}
-        .day-box{background:var(--bg2);border:1px solid var(--border);border-radius:10px;margin-bottom:12px;overflow:hidden}
-        .day-hdr{padding:15px 20px;background:rgba(255,255,255,0.02);display:flex;justify-content:space-between;cursor:pointer;font-weight:600}
-        .day-content{padding:0 20px 15px;display:block}
-        .proc-row{padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
-        .proc-row:last-child{border-bottom:none}
+        .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:15px;margin-bottom:30px}
+        .card{background:var(--bg2);padding:20px;border-radius:12px;border:1px solid var(--border);border-top:4px solid #fff}
+        .adv-name{font-size:12px;color:#8b92a8;text-transform:uppercase;letter-spacing:1px}
+        .adv-val{font-size:32px;font-weight:600;margin:8px 0;display:block}
+        .mini-bar{height:4px;background:rgba(255,255,255,0.05);margin-top:15px;border-radius:2px;overflow:hidden;display:flex}
+        .f-pill{background:transparent;border:1px solid var(--border);color:#8b92a8;padding:8px 16px;border-radius:20px;cursor:pointer;margin-right:8px;font-size:11px}
+        .f-pill.active{background:var(--text);color:var(--bg)}
+        .day-box{background:var(--bg2);border:1px solid var(--border);border-radius:10px;margin-bottom:10px;overflow:hidden}
+        .day-hdr{padding:15px;background:rgba(255,255,255,0.02);display:flex;justify-content:space-between;cursor:pointer}
+        .day-body{padding:0 15px 15px;display:block}
+        .proc{padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
     </style>
 </head>
 <body>
-    <div class="header">
-        <div>
-            <h1 style="margin:0;font-size:22px">PROJUR IPSEM — Dashboard de Processos</h1>
-            <div id="sync" style="color:#555d72;font-size:12px;margin-top:5px">Sincronizando dados...</div>
-        </div>
+    <div style="margin-bottom:30px">
+        <h2 style="margin:0">PROJUR IPSEM</h2>
+        <div id="sync" style="font-size:11px;color:#555d72">Carregando dados reais da planilha...</div>
     </div>
 
-    <div class="adv-grid" id="adv-cards"></div>
+    <div class="metrics" id="cards"></div>
 
-    <div style="margin-bottom:20px">
-        <h3 style="font-size:14px;color:#8b92a8;margin-bottom:15px">AGENDA INTEGRAL DE PRAZOS</h3>
+    <div style="margin:40px 0 20px">
+        <h3 style="font-size:12px;color:#8b92a8;text-transform:uppercase">Agenda de Prazos (Maio - Julho)</h3>
         <div id="filters">
             <button class="f-pill active" onclick="filtrar('Todos', this)">TODOS OS PRAZOS</button>
         </div>
     </div>
 
-    <div id="agenda-lista"></div>
+    <div id="lista"></div>
 
 <script>
     const API = "https://script.google.com/macros/s/AKfycbwHMhqcltmxQil4TbSIejrc-cDbne5Q7Jlt8ZM_scAPaksUz1k-UE6GL72B1DKnO57v/exec";
-    let d = null;
     const CORES = {JOSINALDO:'var(--c-jos)', JULIANA:'var(--c-jul)', JULIANNE:'var(--c-jun)', RAFAELLE:'var(--c-raf)'};
+    let d = null;
 
     async function init() {
-        try {
-            const r = await fetch(API);
-            d = await r.json();
-            render();
-        } catch(e) { document.getElementById('sync').innerText = "Erro ao conectar com a planilha."; }
-    }
-
-    function render() {
-        document.getElementById('sync').innerText = "Última atualização: " + d.geradoEm;
-        const cards = document.getElementById('adv-cards');
-        const filters = document.getElementById('filters');
+        const r = await fetch(API);
+        d = await r.json();
+        document.getElementById('sync').innerText = "Total: " + d.total + " processos | Atualizado em: " + d.geradoEm;
         
+        const cards = document.getElementById('cards');
+        const filters = document.getElementById('filters');
+
         Object.keys(CORES).forEach(adv => {
+            const total = d.porAdv[adv] || 0;
             cards.innerHTML += `
-                <div class="adv-card" style="border-top-color:${CORES[adv]}">
-                    <span style="font-size:12px;color:#8b92a8">${adv}</span>
-                    <span class="val">${d.porAdv[adv] || 0}</span>
-                    <span style="font-size:11px;color:#555d72">Processos Ativos</span>
+                <div class="card" style="border-top-color:${CORES[adv]}">
+                    <span class="adv-name">${adv}</span>
+                    <span class="adv-val">${total}</span>
+                    <div style="font-size:11px;color:#555d72">Processos Totais</div>
                 </div>`;
-            filters.innerHTML += `<button class="f-pill" onclick="filtrar('${adv}', this)" style="border-color:${CORES[adv]}44">${adv}</button>`;
+            filters.innerHTML += `<button class="f-pill" onclick="filtrar('${adv}', this)">${adv}</button>`;
         });
         filtrar('Todos');
     }
@@ -74,7 +69,7 @@
             document.querySelectorAll('.f-pill').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
         }
-        const lista = document.getElementById('agenda-lista');
+        const lista = document.getElementById('lista');
         lista.innerHTML = '';
 
         d.agenda.forEach(dia => {
@@ -83,21 +78,20 @@
             else procs = dia.advs[quem] || [];
 
             if(procs.length > 0) {
-                const dataFormatada = dia.date.split('-').reverse().join('/');
-                const htmlProcs = procs.map(p => `
-                    <div class="proc-row">
-                        <div style="font-weight:600;color:#fff">${p.nome}</div>
+                const dataF = dia.date.split('-').reverse().join('/');
+                const html = procs.map(p => `
+                    <div class="proc">
+                        <div style="font-weight:600">${p.nome}</div>
                         <div style="font-size:11px;color:#8b92a8;margin:4px 0">${p.proc} | ${p.tipo}</div>
-                        <div style="font-size:11px;color:var(--c-jul)">Obs: ${p.obs}</div>
+                        <div style="font-size:11px;color:var(--c-jul)"><b>Obs:</b> ${p.obs}</div>
                     </div>`).join('');
 
                 lista.innerHTML += `
                     <div class="day-box">
                         <div class="day-hdr" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">
-                            <span>${dataFormatada}</span>
-                            <span style="font-size:11px;color:#555d72">${procs.length} PROC. ▾</span>
+                            <span>${dataF}</span><span>${procs.length} ▾</span>
                         </div>
-                        <div class="day-content">${htmlProcs}</div>
+                        <div class="day-body">${html}</div>
                     </div>`;
             }
         });
