@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PROJUR IPSEM — Oficial</title>
+    <title>PROJUR IPSEM — Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -14,31 +14,24 @@
         body { font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
         .container { max-width: 1100px; margin: 0 auto; }
         
-        /* Cabeçalho */
         header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
-        .stats-main { text-align: right; }
         .stats-count { font-size: 32px; font-weight: 600; color: var(--c-jul); display: block; }
         
-        /* Cards */
         .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 40px; }
         .card { background: var(--bg2); padding: 20px; border-radius: 12px; border: 1px solid var(--border); border-top: 4px solid #555; }
-        .card-name { font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 600; }
         .card-num { font-size: 28px; font-weight: 600; display: block; margin-top: 5px; }
 
-        /* Filtros */
-        .filters { display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; }
-        .f-btn { background: var(--bg2); border: 1px solid var(--border); color: var(--text-dim); padding: 8px 18px; border-radius: 20px; cursor: pointer; font-size: 12px; transition: 0.2s; }
+        .filters { display: flex; gap: 8px; margin-bottom: 25px; flex-wrap: wrap; }
+        .f-btn { background: var(--bg2); border: 1px solid var(--border); color: var(--text-dim); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 12px; }
         .f-btn.active { background: var(--text); color: var(--bg); border-color: var(--text); font-weight: 600; }
 
-        /* Agenda */
-        .day-group { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 12px; overflow: hidden; }
-        .day-hdr { padding: 15px 20px; background: rgba(255,255,255,0.02); display: flex; justify-content: space-between; cursor: pointer; transition: 0.2s; }
-        .day-hdr:hover { background: rgba(255,255,255,0.05); }
-        .day-content { display: block; padding: 5px 20px 15px; }
+        .day-group { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 10px; overflow: hidden; }
+        .day-hdr { padding: 15px 20px; background: rgba(255,255,255,0.02); display: flex; justify-content: space-between; cursor: pointer; }
+        .day-content { padding: 5px 20px 15px; }
         
         .proc-card { padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .proc-card:last-child { border-bottom: none; }
-        .badge { font-size: 9px; padding: 2px 6px; border-radius: 4px; color: #fff; margin-right: 8px; vertical-align: middle; }
+        .badge { font-size: 9px; padding: 2px 6px; border-radius: 4px; color: #fff; margin-right: 8px; text-transform: uppercase; }
         .proc-nome { font-weight: 600; color: #fff; font-size: 14px; }
         .proc-info { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
         .proc-obs { font-size: 12px; color: var(--c-jul); margin-top: 8px; border-left: 2px solid var(--c-jul); padding-left: 10px; }
@@ -50,11 +43,11 @@
     <header>
         <div>
             <h1 style="margin:0; font-size:24px">Dashboard IPSEM</h1>
-            <span id="update-time" style="font-size:11px; color:var(--text-dim)">Carregando dados...</span>
+            <span id="update-time" style="font-size:11px; color:var(--text-dim)">Buscando dados...</span>
         </div>
-        <div class="stats-main">
+        <div style="text-align: right;">
             <span id="top-prazos" class="stats-count">0</span>
-            <span style="font-size:10px; color:var(--text-dim); font-weight:600">PRAZOS IDENTIFICADOS</span>
+            <span style="font-size:10px; color:var(--text-dim); font-weight:600">PRAZOS NO TOTAL</span>
         </div>
     </header>
 
@@ -72,66 +65,66 @@
 <script>
     const API = "https://script.google.com/macros/s/AKfycbwHMhqcltmxQil4TbSIejrc-cDbne5Q7Jlt8ZM_scAPaksUz1k-UE6GL72B1DKnO57v/exec";
     const CORES = { JOSINALDO: 'var(--c-jos)', JULIANA: 'var(--c-jul)', JULIANNE: 'var(--c-jun)', RAFAELLE: 'var(--c-raf)' };
-    let bancoDados = null;
+    let dataCache = null;
 
-    async function buscarDados() {
+    async function init() {
         try {
             const res = await fetch(API);
-            bancoDados = await res.json();
-            console.log("Dados recebidos:", bancoDados);
-            montarPainel();
-        } catch (err) {
-            document.getElementById('update-time').innerText = "Erro na conexão.";
+            dataCache = await res.json();
+            
+            document.getElementById('update-time').innerText = "Sincronizado: " + dataCache.geradoEm;
+            document.getElementById('top-prazos').innerText = dataCache.comPrazo;
+
+            const cards = document.getElementById('adv-cards');
+            const btns = document.getElementById('filter-btns');
+
+            Object.keys(CORES).forEach(adv => {
+                cards.innerHTML += `
+                    <div class="card" style="border-top-color: ${CORES[adv]}">
+                        <span style="font-size:11px; color:var(--text-dim); font-weight:600;">${adv}</span>
+                        <span class="card-num">${dataCache.porAdv[adv] || 0}</span>
+                    </div>
+                `;
+                btns.innerHTML += `<button class="f-btn" onclick="filtrar('${adv}', this)">${adv}</button>`;
+            });
+
+            filtrar('Todos');
+        } catch (e) {
+            document.getElementById('update-time').innerText = "Erro ao carregar dados.";
+            console.error(e);
         }
     }
 
-    function montarPainel() {
-        document.getElementById('update-time').innerText = "Sincronizado: " + bancoDados.geradoEm;
-        document.getElementById('top-prazos').innerText = bancoDados.comPrazo;
-
-        const cards = document.getElementById('adv-cards');
-        const btns = document.getElementById('filter-btns');
-
-        Object.keys(CORES).forEach(adv => {
-            const total = bancoDados.porAdv[adv] || 0;
-            cards.innerHTML += `
-                <div class="card" style="border-top-color: ${CORES[adv]}">
-                    <span class="card-name">${adv}</span>
-                    <span class="card-num">${total}</span>
-                </div>
-            `;
-            btns.innerHTML += `<button class="f-btn" onclick="filtrar('${adv}', this)">${adv}</button>`;
-        });
-
-        filtrar('Todos');
-    }
-
-    function filtrar(nome, el) {
-        if (el) {
+    function filtrar(advogado, btn) {
+        if (btn) {
             document.querySelectorAll('.f-btn').forEach(b => b.classList.remove('active'));
-            el.classList.add('active');
+            btn.classList.add('active');
         }
 
         const lista = document.getElementById('agenda-lista');
         lista.innerHTML = '';
 
-        bancoDados.agenda.forEach(item => {
-            let processosDoDia = [];
+        if (!dataCache || !dataCache.agenda) return;
+
+        dataCache.agenda.forEach(dia => {
+            let processosDia = [];
             
-            if (nome === 'Todos') {
-                Object.keys(item.advs).forEach(advKey => {
-                    item.advs[advKey].forEach(p => processosDoDia.push({ ...p, advogado: advKey }));
+            if (advogado === 'Todos') {
+                // Junta todos os processos de todos os advogados do dia
+                Object.keys(dia.advs).forEach(key => {
+                    dia.advs[key].forEach(p => processosDia.push({ ...p, adv: key }));
                 });
             } else {
-                const pList = item.advs[nome] || [];
-                pList.forEach(p => processosDoDia.push({ ...p, advogado: nome }));
+                // Pega apenas o advogado selecionado
+                const pList = dia.advs[advogado] || [];
+                pList.forEach(p => processosDia.push({ ...p, adv: advogado }));
             }
 
-            if (processosDoDia.length > 0) {
-                const dataBR = item.date.split('-').reverse().join('/');
-                const itensHTML = processosDoDia.map(p => `
+            if (processosDia.length > 0) {
+                const dataBR = dia.date.split('-').reverse().join('/');
+                const itens = processosDia.map(p => `
                     <div class="proc-card">
-                        <span class="badge" style="background:${CORES[p.advogado] || '#555'}">${p.advogado}</span>
+                        <span class="badge" style="background:${CORES[p.adv] || '#555'}">${p.adv}</span>
                         <span class="proc-nome">${p.nome}</span>
                         <div class="proc-info">${p.proc} • ${p.tipo}</div>
                         <div class="proc-obs">⏱ ${p.obs}</div>
@@ -142,16 +135,16 @@
                     <div class="day-group">
                         <div class="day-hdr" onclick="this.nextElementSibling.style.display = (this.nextElementSibling.style.display === 'none' ? 'block' : 'none')">
                             <span>${dataBR}</span>
-                            <span style="font-size:11px; opacity:0.6">${processosDoDia.length} PROC. ▾</span>
+                            <span style="font-size:11px; opacity:0.6">${processosDia.length} PROC. ▾</span>
                         </div>
-                        <div class="day-content">${itensHTML}</div>
+                        <div class="day-content">${itens}</div>
                     </div>
                 `;
             }
         });
     }
 
-    buscarDados();
+    init();
 </script>
 </body>
 </html>
