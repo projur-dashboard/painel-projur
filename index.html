@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PROJUR IPSEM | Dashboard</title>
+    <title>PROJUR IPSEM | Dashboard Integrado</title>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -12,37 +12,41 @@
             --c-jos: #4f8ef7; --c-jul: #34d399; --c-jun: #a78bfa; --c-raf: #fb923c;
         }
         body { font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
-        .container { max-width: 1100px; margin: 0 auto; }
+        .container { max-width: 1200px; margin: 0 auto; }
         
         header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; border-bottom: 1px solid var(--border); margin-bottom: 30px; }
-        .stats-main { font-size: 32px; font-weight: 600; color: var(--c-jul); }
-
-        /* VISÃO GERAL - SEMPRE VISÍVEL */
         .section-title { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1.5px; margin: 30px 0 15px; display: block; font-weight: 600; }
-        .grid-overview { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; }
+
+        /* GRID ESTATÍSTICO */
+        .grid-main { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .card-ov { background: var(--bg2); padding: 20px; border-radius: 10px; border: 1px solid var(--border); }
         .ov-val { font-size: 32px; font-weight: 600; display: block; margin-bottom: 5px; color: #fff; }
         .ov-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; }
 
-        /* DISTRIBUIÇÃO - SEMPRE VISÍVEL */
-        .grid-advs { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; }
-        .adv-stat-box { background: var(--bg2); padding: 20px; border-radius: 10px; border-top: 4px solid #555; border-left: 1px solid var(--border); border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-        .adv-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .bar-bg { height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden; }
-        .bar-fill { height: 100%; transition: width 1s; }
-
-        /* AGENDA - RECOLHIDA (ACORDEÃO) */
-        .day-group { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 10px; }
-        .day-hdr { padding: 15px 20px; display: flex; justify-content: space-between; cursor: pointer; transition: 0.2s; }
-        .day-hdr:hover { background: rgba(255,255,255,0.05); }
-        .day-content { display: none; padding: 0 20px 20px; border-top: 1px solid var(--border); }
+        /* GRÁFICOS DE DISTRIBUIÇÃO */
+        .distribution-container { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; margin-bottom: 40px; }
+        .chart-box { background: var(--bg2); padding: 25px; border-radius: 12px; border: 1px solid var(--border); }
         
-        .proc-card { padding: 15px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .proc-card:last-child { border-bottom: none; }
-        .badge { font-size: 9px; padding: 2px 6px; border-radius: 4px; color: #fff; margin-right: 8px; font-weight: 700; text-transform: uppercase; }
-        .obs-box { margin-top: 10px; padding: 10px; border-left: 3px solid var(--c-jul); background: rgba(52, 211, 153, 0.05); font-size: 13px; color: var(--c-jul); font-style: italic; }
+        /* Barras Horizontais (Processos por Tipo) */
+        .type-row { display: flex; align-items: center; margin-bottom: 10px; font-size: 12px; }
+        .type-label { width: 110px; color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .type-bar-bg { flex-grow: 1; height: 12px; background: rgba(255,255,255,0.05); border-radius: 6px; margin: 0 15px; overflow: hidden; }
+        .type-bar-fill { height: 100%; border-radius: 6px; }
 
-        #loading { text-align: center; margin-top: 50px; color: var(--text-dim); }
+        /* Barras Verticais (Entrada Mensal) */
+        .month-chart { display: flex; align-items: flex-end; justify-content: space-between; height: 180px; padding-top: 20px; border-bottom: 1px solid var(--border); }
+        .month-col { display: flex; flex-direction: column; align-items: center; width: 18%; }
+        .month-bar { width: 35px; border-radius: 6px 6px 0 0; background: rgba(79, 142, 247, 0.3); transition: 0.3s; }
+        .month-bar.active { background: var(--c-jos); box-shadow: 0 0 15px rgba(79, 142, 247, 0.4); }
+        .month-name { font-size: 11px; color: var(--text-dim); margin-top: 10px; }
+
+        /* AGENDA RECOLHÍVEL */
+        .day-group { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 10px; }
+        .day-hdr { padding: 15px 20px; display: flex; justify-content: space-between; cursor: pointer; }
+        .day-content { display: none; padding: 20px; border-top: 1px solid var(--border); }
+        .badge { font-size: 9px; padding: 2px 6px; border-radius: 4px; color: #fff; margin-right: 8px; font-weight: 700; }
+
+        @media (max-width: 900px) { .distribution-container { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
@@ -51,97 +55,102 @@
     <header>
         <div>
             <h1 style="margin:0; font-size:24px">PROJUR Dashboard</h1>
-            <small id="upd" style="color:var(--text-dim)">Carregando...</small>
+            <small id="upd" style="color:var(--text-dim)">Sincronizando...</small>
         </div>
         <div style="text-align:right">
-            <span id="top-count" class="stats-main">0</span><br>
-            <small style="font-size:10px; color:var(--text-dim)">PRAZOS ATIVOS</small>
+            <span id="top-count" style="font-size:32px; font-weight:600; color:var(--c-jul)">0</span><br>
+            <small style="font-size:10px; color:var(--text-dim)">PRAZOS IDENTIFICADOS</small>
         </div>
     </header>
 
-    <span class="section-title">Visão Geral de Processos</span>
-    <div class="grid-overview">
-        <div class="card-ov"><span class="ov-val">465</span><span class="ov-label">Total de Processos</span></div>
-        <div class="card-ov"><span class="ov-val" id="ov-prazos" style="color:var(--c-jul)">0</span><span class="ov-label">Com Prazos</span></div>
-        <div class="card-ov"><span class="ov-val">222</span><span class="ov-label">Judiciais</span></div>
-        <div class="card-ov"><span class="ov-val">35</span><span class="ov-label">TCE/PB</span></div>
+    <span class="section-title">Visão Geral e Carga de Trabalho</span>
+    <div class="grid-main" id="adv-grid">
+        </div>
+
+    <div class="distribution-container">
+        <div class="chart-box">
+            <span class="section-title" style="margin-top:0">Processos por Tipo</span>
+            <div id="types-chart" style="margin-top:20px">
+                </div>
+        </div>
+
+        <div class="chart-box">
+            <span class="section-title" style="margin-top:0">Entrada Mensal (Sazonalidade)</span>
+            <div class="month-chart">
+                <div class="month-col"><div class="month-bar" style="height: 28%"></div><span class="month-name">Jan</span></div>
+                <div class="month-col"><div class="month-bar" style="height: 75%"></div><span class="month-name">Fev</span></div>
+                <div class="month-col"><div class="month-bar active" style="height: 100%"></div><span class="month-name">Mar</span></div>
+                <div class="month-col"><div class="month-bar" style="height: 60%"></div><span class="month-name">Abr</span></div>
+                <div class="month-col"><div class="month-bar" style="height: 25%"></div><span class="month-name">Mai</span></div>
+            </div>
+        </div>
     </div>
 
-    <span class="section-title">Carga por Consultor</span>
-    <div class="grid-advs" id="adv-grid"></div>
-
-    <span class="section-title">Cronograma de Prazos (Clique para expandir)</span>
-    <div id="loading">Sincronizando com a planilha...</div>
+    <span class="section-title">Cronograma de Prazos</span>
     <div id="agenda-lista"></div>
 </div>
 
 <script>
     const API = "https://script.google.com/macros/s/AKfycbwHMhqcltmxQil4TbSIejrc-cDbne5Q7Jlt8ZM_scAPaksUz1k-UE6GL72B1DKnO57v/exec?t=" + new Date().getTime();
     const CORES = { JOSINALDO: 'var(--c-jos)', JULIANA: 'var(--c-jul)', JULIANNE: 'var(--c-jun)', RAFAELLE: 'var(--c-raf)' };
+    const TIPOS = [
+        {n: 'Judicial', v: 222, c: '#4f8ef7'}, {n: 'Aposentadoria', v: 42, c: '#34d399'},
+        {n: 'TCE', v: 35, c: '#a78bfa'}, {n: 'CTC', v: 30, c: '#fb923c'},
+        {n: 'Revisão', v: 28, c: '#f472b6'}, {n: 'Pensão', v: 26, c: '#22d3ee'}
+    ];
 
     async function init() {
-        try {
-            const res = await fetch(API);
-            const d = await res.json();
-            
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('upd').innerText = "Atualizado em: " + d.geradoEm;
-            document.getElementById('top-count').innerText = d.comPrazo;
-            document.getElementById('ov-prazos').innerText = d.comPrazo;
+        const res = await fetch(API);
+        const d = await res.json();
+        
+        document.getElementById('upd').innerText = "Atualizado em: " + d.geradoEm;
+        document.getElementById('top-count').innerText = d.comPrazo;
 
-            // Renderizar Gráficos de Carga
-            const advGrid = document.getElementById('adv-grid');
-            Object.keys(CORES).forEach(adv => {
-                const total = d.porAdv[adv] || 0;
-                const perc = Math.min((total / 140) * 100, 100); // Base 140 para a barra
-                advGrid.innerHTML += `
-                    <div class="adv-stat-box" style="border-top-color: ${CORES[adv]}">
-                        <div class="adv-header"><strong>${adv}</strong><span style="color:${CORES[adv]}">${total}</span></div>
-                        <div class="bar-bg"><div class="bar-fill" style="width:${perc}%; background:${CORES[adv]}"></div></div>
-                        <small style="font-size:10px; color:var(--text-dim)">PROCESSOS ATIVOS</small>
+        // Render Advogados
+        const advGrid = document.getElementById('adv-grid');
+        Object.keys(CORES).forEach(adv => {
+            advGrid.innerHTML += `
+                <div class="card-ov" style="border-top: 4px solid ${CORES[adv]}">
+                    <span class="ov-label">${adv}</span>
+                    <span class="ov-val">${d.porAdv[adv] || 0}</span>
+                </div>`;
+        });
+
+        // Render Tipos
+        const typeCont = document.getElementById('types-chart');
+        TIPOS.forEach(t => {
+            const p = (t.v / 222) * 100;
+            typeCont.innerHTML += `
+                <div class="type-row">
+                    <span class="type-label">${t.n}</span>
+                    <div class="type-bar-bg"><div class="type-bar-fill" style="width:${p}%; background:${t.c}"></div></div>
+                    <span style="width:30px; text-align:right; font-weight:600">${t.v}</span>
+                </div>`;
+        });
+
+        // Render Agenda
+        const lista = document.getElementById('agenda-lista');
+        d.agenda.forEach(dia => {
+            let cards = "";
+            Object.keys(dia.advs).forEach(adv => {
+                dia.advs[adv].forEach(p => {
+                    cards += `<div style="margin-bottom:15px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:10px">
+                        <span class="badge" style="background:${CORES[adv]}">${adv}</span> <strong>${p.nome}</strong><br>
+                        <small style="color:var(--text-dim)">${p.proc}</small>
+                        <div style="color:var(--c-jul); font-size:13px; margin-top:5px">● ${p.obs}</div>
                     </div>`;
-            });
-
-            // Renderizar Agenda Recolhida
-            const lista = document.getElementById('agenda-lista');
-            d.agenda.forEach(dia => {
-                const dataBR = dia.date.split('-').reverse().join('/');
-                let cardsHtml = "";
-                let count = 0;
-
-                Object.keys(dia.advs).forEach(adv => {
-                    dia.advs[adv].forEach(p => {
-                        count++;
-                        cardsHtml += `
-                            <div class="proc-card">
-                                <span class="badge" style="background:${CORES[adv]}">${adv}</span>
-                                <span style="font-weight:600; font-size:14px; color:#fff">${p.nome}</span>
-                                <div style="font-size:12px; color:var(--text-dim); margin-top:4px">${p.proc} • ${p.tipo}</div>
-                                <div class="obs-box">${p.obs}</div>
-                            </div>`;
-                    });
                 });
-
-                lista.innerHTML += `
-                    <div class="day-group">
-                        <div class="day-hdr" onclick="toggle(this)">
-                            <span>📅 ${dataBR}</span>
-                            <span style="font-size:11px; font-weight:600; color:var(--c-jul)">${count} PRAZOS ▾</span>
-                        </div>
-                        <div class="day-content">${cardsHtml}</div>
-                    </div>`;
             });
-        } catch (e) {
-            document.getElementById('loading').innerText = "Erro ao carregar dados.";
-        }
+            lista.innerHTML += `
+                <div class="day-group">
+                    <div class="day-hdr" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'block' ? 'none' : 'block'">
+                        <span>📅 ${dia.date.split('-').reverse().join('/')}</span>
+                        <span style="font-size:11px; color:var(--c-jul)">DETALHES ▾</span>
+                    </div>
+                    <div class="day-content">${cards}</div>
+                </div>`;
+        });
     }
-
-    function toggle(el) {
-        const content = el.nextElementSibling;
-        const isVisible = content.style.display === 'block';
-        content.style.display = isVisible ? 'none' : 'block';
-    }
-
     init();
 </script>
 </body>
