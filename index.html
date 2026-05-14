@@ -2,101 +2,71 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PROJUR IPSEM — Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <title>PROJUR IPSEM 2026</title>
     <style>
-        :root{--bg:#0f1117;--bg2:#161b27;--border:rgba(255,255,255,0.07);--text:#e8eaf0;--c-jos:#4f8ef7;--c-jul:#34d399;--c-jun:#a78bfa;--c-raf:#fb923c}
-        body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);margin:0;padding:24px}
-        .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:15px;margin-bottom:30px}
-        .card{background:var(--bg2);padding:20px;border-radius:12px;border:1px solid var(--border);border-top:4px solid #fff}
-        .adv-name{font-size:12px;color:#8b92a8;text-transform:uppercase;letter-spacing:1px}
-        .adv-val{font-size:32px;font-weight:600;margin:8px 0;display:block}
-        .mini-bar{height:4px;background:rgba(255,255,255,0.05);margin-top:15px;border-radius:2px;overflow:hidden;display:flex}
-        .f-pill{background:transparent;border:1px solid var(--border);color:#8b92a8;padding:8px 16px;border-radius:20px;cursor:pointer;margin-right:8px;font-size:11px}
-        .f-pill.active{background:var(--text);color:var(--bg)}
-        .day-box{background:var(--bg2);border:1px solid var(--border);border-radius:10px;margin-bottom:10px;overflow:hidden}
-        .day-hdr{padding:15px;background:rgba(255,255,255,0.02);display:flex;justify-content:space-between;cursor:pointer}
-        .day-body{padding:0 15px 15px;display:block}
-        .proc{padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+        body{background:#0f1117;color:#e8eaf0;font-family:sans-serif;margin:0;padding:20px}
+        .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:15px;margin-bottom:30px}
+        .card{background:#161b27;padding:20px;border-radius:12px;border-top:4px solid #4f8ef7;border-left:1px solid #2d3343}
+        .day-box{background:#161b27;margin-bottom:10px;border-radius:8px;border:1px solid #2d3343}
+        .day-hdr{padding:15px;background:rgba(255,255,255,0.03);cursor:pointer;display:flex;justify-content:space-between;font-weight:600}
+        .proc{padding:12px;border-top:1px solid #2d3343}
+        .adv-tag{font-size:10px;padding:2px 6px;border-radius:4px;margin-right:8px;color:#fff}
     </style>
 </head>
 <body>
-    <div style="margin-bottom:30px">
-        <h2 style="margin:0">PROJUR IPSEM</h2>
-        <div id="sync" style="font-size:11px;color:#555d72">Carregando dados reais da planilha...</div>
-    </div>
-
-    <div class="metrics" id="cards"></div>
-
-    <div style="margin:40px 0 20px">
-        <h3 style="font-size:12px;color:#8b92a8;text-transform:uppercase">Agenda de Prazos (Maio - Julho)</h3>
-        <div id="filters">
-            <button class="f-pill active" onclick="filtrar('Todos', this)">TODOS OS PRAZOS</button>
-        </div>
-    </div>
-
+    <h2 id="titulo">PROJUR IPSEM</h2>
+    <p id="info" style="color:#8b92a8;font-size:12px">Sincronizando...</p>
+    
+    <div class="grid" id="cards"></div>
+    
+    <h3>Agenda de Prazos (Maio/Julho)</h3>
     <div id="lista"></div>
 
-<script>
-    const API = "https://script.google.com/macros/s/AKfycbwHMhqcltmxQil4TbSIejrc-cDbne5Q7Jlt8ZM_scAPaksUz1k-UE6GL72B1DKnO57v/exec";
-    const CORES = {JOSINALDO:'var(--c-jos)', JULIANA:'var(--c-jul)', JULIANNE:'var(--c-jun)', RAFAELLE:'var(--c-raf)'};
-    let d = null;
+    <script>
+        const API = "https://script.google.com/macros/s/AKfycbwHMhqcltmxQil4TbSIejrc-cDbne5Q7Jlt8ZM_scAPaksUz1k-UE6GL72B1DKnO57v/exec";
+        const CORES = {JOSINALDO:'#4f8ef7', JULIANA:'#34d399', JULIANNE:'#a78bfa', RAFAELLE:'#fb923c', OUTROS:'#555d72'};
 
-    async function init() {
-        const r = await fetch(API);
-        d = await r.json();
-        document.getElementById('sync').innerText = "Total: " + d.total + " processos | Atualizado em: " + d.geradoEm;
-        
-        const cards = document.getElementById('cards');
-        const filters = document.getElementById('filters');
-
-        Object.keys(CORES).forEach(adv => {
-            const total = d.porAdv[adv] || 0;
-            cards.innerHTML += `
-                <div class="card" style="border-top-color:${CORES[adv]}">
-                    <span class="adv-name">${adv}</span>
-                    <span class="adv-val">${total}</span>
-                    <div style="font-size:11px;color:#555d72">Processos Totais</div>
-                </div>`;
-            filters.innerHTML += `<button class="f-pill" onclick="filtrar('${adv}', this)">${adv}</button>`;
-        });
-        filtrar('Todos');
-    }
-
-    function filtrar(quem, btn) {
-        if(btn) {
-            document.querySelectorAll('.f-pill').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-        }
-        const lista = document.getElementById('lista');
-        lista.innerHTML = '';
-
-        d.agenda.forEach(dia => {
-            let procs = [];
-            if(quem === 'Todos') Object.values(dia.advs).forEach(l => procs = procs.concat(l));
-            else procs = dia.advs[quem] || [];
-
-            if(procs.length > 0) {
-                const dataF = dia.date.split('-').reverse().join('/');
-                const html = procs.map(p => `
-                    <div class="proc">
-                        <div style="font-weight:600">${p.nome}</div>
-                        <div style="font-size:11px;color:#8b92a8;margin:4px 0">${p.proc} | ${p.tipo}</div>
-                        <div style="font-size:11px;color:var(--c-jul)"><b>Obs:</b> ${p.obs}</div>
-                    </div>`).join('');
-
-                lista.innerHTML += `
-                    <div class="day-box">
-                        <div class="day-hdr" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">
-                            <span>${dataF}</span><span>${procs.length} ▾</span>
-                        </div>
-                        <div class="day-body">${html}</div>
+        async function load() {
+            const r = await fetch(API);
+            const d = await r.json();
+            
+            document.getElementById('info').innerText = "Total: " + d.total + " processos | Atualizado em: " + d.geradoEm;
+            
+            const cards = document.getElementById('cards');
+            cards.innerHTML = "";
+            for(let adv in d.porAdv) {
+                if(d.porAdv[adv] > 0) {
+                    cards.innerHTML += `<div class="card" style="border-top-color:${CORES[adv] || '#555d72'}">
+                        <small style="color:#8b92a8">${adv}</small><br>
+                        <span style="font-size:32px;font-weight:600">${d.porAdv[adv]}</span>
                     </div>`;
+                }
             }
-        });
-    }
-    init();
-</script>
+
+            const lista = document.getElementById('lista');
+            lista.innerHTML = "";
+            d.agenda.forEach(dia => {
+                let htmlProcs = "";
+                for(let adv in dia.advs) {
+                    dia.advs[adv].forEach(p => {
+                        htmlProcs += `<div class="proc">
+                            <span class="adv-tag" style="background:${CORES[adv] || '#555'}">${adv}</span>
+                            <b>${p.nome}</b><br>
+                            <small style="color:#8b92a8">${p.proc}</small><br>
+                            <span style="color:#34d399;font-size:13px">⏱ ${p.obs}</span>
+                        </div>`;
+                    });
+                }
+                const dataF = dia.date.split('-').reverse().join('/');
+                lista.innerHTML += `<div class="day-box">
+                    <div class="day-hdr" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">
+                        <span>${dataF}</span><span>${dia.date > '2026-04' ? '🔴' : ''}</span>
+                    </div>
+                    <div class="day-content">${htmlProcs}</div>
+                </div>`;
+            });
+        }
+        load();
+    </script>
 </body>
 </html>
