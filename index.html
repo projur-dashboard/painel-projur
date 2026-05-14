@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PROJUR/IPSEM — Dashboard (Live)</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{--bg:#0f1117;--bg2:#161b27;--border:rgba(255,255,255,0.07);--text:#e8eaf0;--text2:#8b92a8;--c-jos:#4f8ef7;--c-jul:#34d399;--c-jun:#a78bfa;--c-raf:#fb923c}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);margin:0;padding:20px}
+header{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:15px;margin-bottom:20px}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:30px}
+.card{background:var(--bg2);padding:20px;border-radius:10px;border:1px solid var(--border)}
+.val{font-size:32px;font-weight:600;display:block}
+.lbl{font-family:'IBM Plex Mono',monospace;color:var(--text2);font-size:12px;text-transform:uppercase}
+</style>
+</head>
+<body>
+<header>
+  <div><strong>PROJUR</strong> IPSEM Dashboard 2026</div>
+  <div id="status">Conectando à planilha...</div>
+</header>
+
+<div class="metrics">
+  <div class="card" style="border-top:3px solid var(--c-jos)"><span class="lbl">Total Processos</span><span class="val" id="total">—</span></div>
+  <div class="card" style="border-top:3px solid var(--c-jul)"><span class="lbl">Com Prazo</span><span class="val" id="prazo">—</span></div>
+</div>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbwHMhqcltmxQil4TbSIejrc-cDbne5Q7Jlt8ZM_scAPaksUz1k-UE6GL72B1DKnO57v/exec";
+
+async function load() {
+  try {
+    const r = await fetch(API_URL);
+    const d = await r.json();
+    document.getElementById('total').textContent = d.total;
+    document.getElementById('prazo').textContent = d.comPrazo;
+    document.getElementById('status').textContent = "Sincronizado: " + d.geradoEm;
+  } catch(e) {
+    document.getElementById('status').textContent = "Erro ao carregar dados";
+  }
+}
+load();
+</script>
+</body>
+</html>
