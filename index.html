@@ -22,19 +22,21 @@
         .card-num { font-size: 28px; font-weight: 600; display: block; margin-top: 5px; }
 
         .filters { display: flex; gap: 8px; margin-bottom: 25px; flex-wrap: wrap; }
-        .f-btn { background: var(--bg2); border: 1px solid var(--border); color: var(--text-dim); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 12px; }
+        .f-btn { background: var(--bg2); border: 1px solid var(--border); color: var(--text-dim); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 12px; transition: 0.2s; }
         .f-btn.active { background: var(--text); color: var(--bg); border-color: var(--text); font-weight: 600; }
 
         .day-group { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 10px; overflow: hidden; }
         .day-hdr { padding: 15px 20px; background: rgba(255,255,255,0.02); display: flex; justify-content: space-between; cursor: pointer; }
-        .day-content { padding: 5px 20px 15px; }
+        .day-content { padding: 5px 20px 15px; border-top: 1px solid var(--border); }
         
         .proc-card { padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .proc-card:last-child { border-bottom: none; }
-        .badge { font-size: 9px; padding: 2px 6px; border-radius: 4px; color: #fff; margin-right: 8px; text-transform: uppercase; }
+        .badge { font-size: 9px; padding: 2px 6px; border-radius: 4px; color: #fff; margin-right: 8px; text-transform: uppercase; font-weight: 600; }
         .proc-nome { font-weight: 600; color: #fff; font-size: 14px; }
         .proc-info { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
         .proc-obs { font-size: 12px; color: var(--c-jul); margin-top: 8px; border-left: 2px solid var(--c-jul); padding-left: 10px; }
+        
+        #loading { text-align: center; padding: 50px; color: var(--text-dim); font-size: 14px; }
     </style>
 </head>
 <body>
@@ -42,38 +44,45 @@
 <div class="container">
     <header>
         <div>
-            <h1 style="margin:0; font-size:24px">Dashboard IPSEM</h1>
-            <span id="update-time" style="font-size:11px; color:var(--text-dim)">Buscando dados...</span>
+            <h1 style="margin:0; font-size:24px">Dashboard PROJUR</h1>
+            <span id="update-time" style="font-size:11px; color:var(--text-dim)">Sincronizando dados...</span>
         </div>
         <div style="text-align: right;">
             <span id="top-prazos" class="stats-count">0</span>
-            <span style="font-size:10px; color:var(--text-dim); font-weight:600">PRAZOS NO TOTAL</span>
+            <span style="font-size:10px; color:var(--text-dim); font-weight:600">PRAZOS ATIVOS</span>
         </div>
     </header>
 
-    <div class="metrics" id="adv-cards"></div>
+    <div id="loading">Carregando informações da planilha...</div>
 
-    <div class="agenda-section">
-        <h3 style="font-size:12px; color:var(--text-dim); text-transform:uppercase; margin-bottom:20px">Agenda de Prazos</h3>
-        <div class="filters" id="filter-btns">
-            <button class="f-btn active" onclick="filtrar('Todos', this)">TODOS</button>
+    <div id="main-content" style="display:none">
+        <div class="metrics" id="adv-cards"></div>
+
+        <div class="agenda-section">
+            <h3 style="font-size:12px; color:var(--text-dim); text-transform:uppercase; margin-bottom:20px">Agenda de Prazos (2026)</h3>
+            <div class="filters" id="filter-btns">
+                <button class="f-btn active" onclick="filtrar('Todos', this)">TODOS</button>
+            </div>
+            <div id="agenda-lista"></div>
         </div>
-        <div id="agenda-lista"></div>
     </div>
 </div>
 
 <script>
-    const API = "https://script.google.com/macros/s/AKfycbwHMhqcltmxQil4TbSIejrc-cDbne5Q7Jlt8ZM_scAPaksUz1k-UE6GL72B1DKnO57v/exec";
+    // URL da sua API com um "carimbo" de tempo para evitar cache
+    const API = "https://script.google.com/macros/s/AKfycbwHMhqcltmxQil4TbSIejrc-cDbne5Q7Jlt8ZM_scAPaksUz1k-UE6GL72B1DKnO57v/exec?v=" + new Date().getTime();
     const CORES = { JOSINALDO: 'var(--c-jos)', JULIANA: 'var(--c-jul)', JULIANNE: 'var(--c-jun)', RAFAELLE: 'var(--c-raf)' };
-    let dataCache = null;
+    let d = null;
 
     async function init() {
         try {
             const res = await fetch(API);
-            dataCache = await res.json();
+            d = await res.json();
             
-            document.getElementById('update-time').innerText = "Sincronizado: " + dataCache.geradoEm;
-            document.getElementById('top-prazos').innerText = dataCache.comPrazo;
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('main-content').style.display = 'block';
+            document.getElementById('update-time').innerText = "Última atualização: " + d.geradoEm;
+            document.getElementById('top-prazos').innerText = d.comPrazo;
 
             const cards = document.getElementById('adv-cards');
             const btns = document.getElementById('filter-btns');
@@ -82,7 +91,7 @@
                 cards.innerHTML += `
                     <div class="card" style="border-top-color: ${CORES[adv]}">
                         <span style="font-size:11px; color:var(--text-dim); font-weight:600;">${adv}</span>
-                        <span class="card-num">${dataCache.porAdv[adv] || 0}</span>
+                        <span class="card-num">${d.porAdv[adv] || 0}</span>
                     </div>
                 `;
                 btns.innerHTML += `<button class="f-btn" onclick="filtrar('${adv}', this)">${adv}</button>`;
@@ -90,12 +99,11 @@
 
             filtrar('Todos');
         } catch (e) {
-            document.getElementById('update-time').innerText = "Erro ao carregar dados.";
-            console.error(e);
+            document.getElementById('loading').innerText = "Erro ao conectar com a API do Google.";
         }
     }
 
-    function filtrar(advogado, btn) {
+    function filtrar(quem, btn) {
         if (btn) {
             document.querySelectorAll('.f-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
@@ -104,25 +112,19 @@
         const lista = document.getElementById('agenda-lista');
         lista.innerHTML = '';
 
-        if (!dataCache || !dataCache.agenda) return;
-
-        dataCache.agenda.forEach(dia => {
-            let processosDia = [];
-            
-            if (advogado === 'Todos') {
-                // Junta todos os processos de todos os advogados do dia
+        d.agenda.forEach(dia => {
+            let procs = [];
+            if (quem === 'Todos') {
                 Object.keys(dia.advs).forEach(key => {
-                    dia.advs[key].forEach(p => processosDia.push({ ...p, adv: key }));
+                    dia.advs[key].forEach(p => procs.push({ ...p, adv: key }));
                 });
             } else {
-                // Pega apenas o advogado selecionado
-                const pList = dia.advs[advogado] || [];
-                pList.forEach(p => processosDia.push({ ...p, adv: advogado }));
+                (dia.advs[quem] || []).forEach(p => procs.push({ ...p, adv: quem }));
             }
 
-            if (processosDia.length > 0) {
+            if (procs.length > 0) {
                 const dataBR = dia.date.split('-').reverse().join('/');
-                const itens = processosDia.map(p => `
+                const itens = procs.map(p => `
                     <div class="proc-card">
                         <span class="badge" style="background:${CORES[p.adv] || '#555'}">${p.adv}</span>
                         <span class="proc-nome">${p.nome}</span>
@@ -133,15 +135,19 @@
 
                 lista.innerHTML += `
                     <div class="day-group">
-                        <div class="day-hdr" onclick="this.nextElementSibling.style.display = (this.nextElementSibling.style.display === 'none' ? 'block' : 'none')">
+                        <div class="day-hdr" onclick="toggle(this)">
                             <span>${dataBR}</span>
-                            <span style="font-size:11px; opacity:0.6">${processosDia.length} PROC. ▾</span>
+                            <span style="font-size:11px; opacity:0.6">${procs.length} PRAZOS ▾</span>
                         </div>
-                        <div class="day-content">${itens}</div>
-                    </div>
-                `;
+                        <div class="day-content" style="display:block">${itens}</div>
+                    </div>`;
             }
         });
+    }
+
+    function toggle(el) {
+        const c = el.nextElementSibling;
+        c.style.display = (c.style.display === 'none') ? 'block' : 'none';
     }
 
     init();
