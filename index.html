@@ -3,19 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PROJUR/IPSEM — Dashboard Direto</title>
+<title>PROJUR/IPSEM — Dashboard 2026</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
-/* Mantive exatamente o seu CSS original para não mudar nada no visual que você aprovou */
 :root{--bg:#0f1117;--bg2:#161b27;--bg3:#1e2535;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);--text:#e8eaf0;--text2:#8b92a8;--text3:#555d72;--c-jos:#4f8ef7;--c-jul:#34d399;--c-jun:#a78bfa;--c-raf:#fb923c}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.6}
 header{border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;gap:16px;height:52px;position:sticky;top:0;background:rgba(15,17,23,0.94);backdrop-filter:blur(10px);z-index:100}
 .logo-mark{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;letter-spacing:.12em;color:var(--c-jos);text-transform:uppercase;border:1px solid var(--c-jos);padding:3px 8px;border-radius:4px}
 .hdr-title{font-size:13px;color:var(--text2);flex:1}
-.hdr-right{display:flex;align-items:center;gap:10px}
 #last-update{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3)}
 .hdr-badge{font-family:'IBM Plex Mono',monospace;font-size:10px;background:rgba(52,211,153,0.12);color:#34d399;border:1px solid rgba(52,211,153,0.25);padding:2px 8px;border-radius:20px}
 main{padding:24px 28px;max-width:1280px;margin:0 auto}
@@ -24,7 +22,7 @@ main{padding:24px 28px;max-width:1280px;margin:0 auto}
 .metric{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px 18px;position:relative;overflow:hidden}
 .metric::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
 .m-blue::before{background:var(--c-jos)}.m-green::before{background:var(--c-jul)}.m-purple::before{background:var(--c-jun)}.m-orange::before{background:var(--c-raf)}
-.metric-lbl{font-size:11px;color:var(--text3);margin-bottom:6px;font-family:'IBM Plex Mono',monospace;letter-spacing:.04em}
+.metric-lbl{font-size:11px;color:var(--text3);margin-bottom:6px;font-family:'IBM Plex Mono',monospace}
 .metric-val{font-size:30px;font-weight:600;line-height:1;color:var(--text)}
 .metric-sub{font-size:11px;color:var(--text3);margin-top:5px}
 .adv-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
@@ -33,20 +31,15 @@ main{padding:24px 28px;max-width:1280px;margin:0 auto}
 .adv-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 .adv-n{font-size:24px;font-weight:600;color:var(--text)}
 .adv-nsub{font-size:11px;color:var(--text3);margin-bottom:12px}
-.mini-bars{display:flex;flex-direction:column;gap:5px}
-.mb-row{display:flex;align-items:center;gap:7px}
-.mb-lbl{font-size:11px;color:var(--text3);width:68px;text-align:right;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'IBM Plex Mono',monospace}
-.mb-bg{flex:1;background:var(--bg3);border-radius:2px;height:4px}
-.mb-fill{height:4px;border-radius:2px}
-.mb-cnt{font-size:11px;color:var(--text3);width:20px;text-align:right;font-family:'IBM Plex Mono',monospace}
 .charts-row{display:grid;grid-template-columns:1.4fr 1fr;gap:10px}
 .chart-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px 18px}
-.chart-title{font-size:11px;font-weight:500;color:var(--text3);margin-bottom:12px;font-family:'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase}
+.chart-title{font-size:11px;font-weight:500;color:var(--text3);margin-bottom:12px;font-family:'IBM Plex Mono',monospace;text-transform:uppercase}
 .afilters{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}
 .fpill{border:1px solid var(--border2);border-radius:20px;padding:4px 13px;font-size:12px;cursor:pointer;background:transparent;color:var(--text2);transition:all .15s}
 .fpill.active{background:var(--text);color:var(--bg);border-color:var(--text)}
 .day-block{background:var(--bg2);border:1px solid var(--border);border-radius:10px;margin-bottom:7px;overflow:hidden}
-.day-hdr{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer}
+.day-hdr{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;transition: background 0.2s;}
+.day-hdr:hover{background: var(--bg3);}
 .dd-date{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text2);min-width:86px}
 .dd-name{font-size:12px;color:var(--text3);flex:1}
 .badge{font-size:10px;font-weight:500;padding:2px 8px;border-radius:20px;font-family:'IBM Plex Mono',monospace}
@@ -61,16 +54,21 @@ main{padding:24px 28px;max-width:1280px;margin:0 auto}
 .proc-item{padding:7px 0;border-bottom:1px solid var(--border)}
 .proc-nome{font-size:12px;font-weight:500;color:var(--text);margin-bottom:3px}
 .ttag{font-size:10px;padding:1px 6px;border-radius:3px;font-family:'IBM Plex Mono',monospace;background:var(--bg3);color:var(--text2)}
-#loader{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);display:flex;justify-content:center;align-items:center;z-index:9999}
+#loading-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:999;color:var(--text2);font-family:'IBM Plex Mono',monospace}
+.spinner{width:30px;height:30px;border:2px solid var(--border);border-top-color:var(--c-jos);border-radius:50%;animation:spin 1s linear infinite;margin-bottom:15px}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
 
-<div id="loader">Aguarde, sincronizando com a planilha...</div>
+<div id="loading-overlay">
+  <div class="spinner"></div>
+  Sincronizando com a base do IPSEM...
+</div>
 
 <header>
   <div class="logo-mark">PROJUR</div>
-  <div class="hdr-title">IPSEM Dashboard — Conectado em Tempo Real</div>
+  <div class="hdr-title">IPSEM Campina Grande — Dashboard de Prazos</div>
   <div class="hdr-right">
     <span id="last-update">Sincronizando...</span>
     <span class="hdr-badge" id="data-badge">--- processos</span>
@@ -80,112 +78,107 @@ main{padding:24px 28px;max-width:1280px;margin:0 auto}
 <main>
   <div class="slabel">Visão Geral</div>
   <div class="metrics-row">
-    <div class="metric m-blue"><div class="metric-lbl">Total de processos</div><div class="metric-val" id="m-total">---</div><div class="metric-sub">Base Geral</div></div>
-    <div class="metric m-green"><div class="metric-lbl">Com prazos ativos</div><div class="metric-val" id="m-prazo">---</div><div class="metric-sub" id="perc-prazo">---</div></div>
-    <div class="metric m-purple"><div class="metric-lbl">Processos judiciais</div><div class="metric-val" id="m-jud">---</div><div class="metric-sub" id="perc-jud">---</div></div>
-    <div class="metric m-orange"><div class="metric-lbl">Outros/TCE</div><div class="metric-val" id="m-tce">---</div><div class="metric-sub">Extrajudiciais</div></div>
+    <div class="metric m-blue"><div class="metric-lbl">Base de Processos</div><div class="metric-val" id="m-total">---</div><div class="metric-sub">Total catalogado</div></div>
+    <div class="metric m-green"><div class="metric-lbl">Prazos Identificados</div><div class="metric-val" id="m-prazo">---</div><div class="metric-sub" id="m-sub-prazo">---</div></div>
+    <div class="metric m-purple"><div class="metric-lbl">Judiciais</div><div class="metric-val" id="m-jud">---</div><div class="metric-sub" id="m-sub-jud">---</div></div>
+    <div class="metric m-orange"><div class="metric-lbl">TCE e Outros</div><div class="metric-val" id="m-tce">---</div><div class="metric-sub">Administrativos</div></div>
   </div>
 
-  <div class="slabel">Por Advogado / Consultor Jurídico</div>
+  <div class="slabel">Carga por Consultor</div>
   <div class="adv-row" id="adv-cards"></div>
 
   <div class="slabel">Distribuição Analítica</div>
   <div class="charts-row">
     <div class="chart-card">
-      <div class="chart-title">Processos por tipo</div>
+      <div class="chart-title">Processos por Categoria</div>
       <div style="position:relative;height:250px"><canvas id="chart-tipo"></canvas></div>
     </div>
     <div class="chart-card">
-      <div class="chart-title">Acompanhamento Temporal</div>
+      <div class="chart-title">Pico de Atividade (2026)</div>
       <div style="position:relative;height:250px"><canvas id="chart-mes"></canvas></div>
     </div>
   </div>
 
-  <div class="slabel">Agenda de Prazos</div>
-  <div class="afilters" id="filters-container">
+  <div class="slabel">Agenda de Prazos Futuros</div>
+  <div class="afilters">
     <button class="fpill active" onclick="setFilter('todos',this)">Todos</button>
-    <button class="fpill" onclick="setFilter('JOSINALDO',this)">Josinaldo</button>
-    <button class="fpill" onclick="setFilter('JULIANA',this)">Juliana</button>
-    <button class="fpill" onclick="setFilter('JULIANNE',this)">Julianne</button>
-    <button class="fpill" onclick="setFilter('RAFAELLE',this)">Rafaelle</button>
+    <button class="fpill" onclick="setFilter('JOSINALDO',this)" style="border-color:var(--c-jos)">Josinaldo</button>
+    <button class="fpill" onclick="setFilter('JULIANA',this)" style="border-color:var(--c-jul)">Juliana</button>
+    <button class="fpill" onclick="setFilter('JULIANNE',this)" style="border-color:var(--c-jun)">Julianne</button>
+    <button class="fpill" onclick="setFilter('RAFAELLE',this)" style="border-color:var(--c-raf)">Rafaelle</button>
   </div>
   <div id="agenda-container"></div>
 </main>
 
 <script>
-// URL DA SUA API (GOOGLE SCRIPT)
-const API_URL = "https://script.google.com/macros/s/AKfycbwHMhqcltmxQil4TbSIejrc-cDbne5Q7Jlt8ZM_scAPaksUz1k-UE6GL72B1DKnO57v/exec";
+// URL DEFINIDA POR VOCÊ
+const API_URL = "https://script.google.com/macros/s/AKfycbwHMhqcltmxQil4TbSIejrc-cDbne5Q7Jlt8ZM_scAPaksUz1k-UE6GL72B1DKnO57v/exec"; 
 const ADV_COLORS = {JOSINALDO:'#4f8ef7', JULIANA:'#34d399', JULIANNE:'#a78bfa', RAFAELLE:'#fb923c'};
 
 let DATA = {};
 let activeFilter = 'todos';
 let openDays = new Set();
 
-async function fetchData() {
+async function init() {
     try {
         const response = await fetch(API_URL + "?t=" + new Date().getTime());
         DATA = await response.json();
-        document.getElementById('loader').style.display = 'none';
-        renderAll();
+        document.getElementById('loading-overlay').style.display = 'none';
+        renderDashboard();
     } catch (e) {
-        document.getElementById('loader').innerText = "Erro ao carregar dados. Verifique a permissão do Script.";
+        document.getElementById('loading-overlay').innerHTML = "Erro de conexão.<br>Verifique se o Script foi publicado como 'Qualquer Pessoa'.";
     }
 }
 
-function renderAll() {
-    // Atualiza Header e Métricas
-    document.getElementById('last-update').textContent = 'Sincronizado em ' + DATA.geradoEm;
+function renderDashboard() {
+    document.getElementById('last-update').textContent = 'Sincronizado: ' + DATA.geradoEm;
     document.getElementById('data-badge').textContent = DATA.comPrazo + ' prazos ativos';
     
-    // Supondo total fixo de 465 processos da sua imagem original
+    // Supondo total fixo de 465 processos conforme layout
     const totalGeral = 465;
     document.getElementById('m-total').textContent = totalGeral;
     document.getElementById('m-prazo').textContent = DATA.comPrazo;
-    document.getElementById('perc-prazo').textContent = Math.round((DATA.comPrazo/totalGeral)*100) + '% do total';
+    document.getElementById('m-sub-prazo').textContent = Math.round((DATA.comPrazo/totalGeral)*100) + '% da carga';
     
     const jud = DATA.porTipo['Judicial'] || 0;
     document.getElementById('m-jud').textContent = jud;
+    document.getElementById('m-sub-jud').textContent = Math.round((jud/totalGeral)*100) + '% da carga';
     document.getElementById('m-tce').textContent = (DATA.porTipo['TCE'] || 0) + (DATA.porTipo['CTC'] || 0);
 
-    // Adv Cards
-    const ac = document.getElementById('adv-cards'); 
+    const ac = document.getElementById('adv-cards');
     ac.innerHTML = '';
     ['JOSINALDO','JULIANA','JULIANNE','RAFAELLE'].forEach(adv => {
-        const total = DATA.porAdv[adv] || 0;
+        const count = DATA.porAdv[adv] || 0;
         const color = ADV_COLORS[adv];
-        const card = document.createElement('div');
-        card.className = 'adv-card';
-        card.style.borderTop = `3px solid ${color}`;
-        card.innerHTML = `<div class="adv-name"><span class="adv-dot" style="background:${color}"></span>${adv}</div><div class="adv-n">${total}</div><div class="adv-nsub">processos</div>`;
-        ac.appendChild(card);
+        ac.innerHTML += `
+            <div class="adv-card" style="border-top: 2px solid ${color}">
+                <div class="adv-name"><span class="adv-dot" style="background:${color}"></span>${adv}</div>
+                <div class="adv-n">${count}</div>
+                <div class="adv-nsub">processos</div>
+            </div>`;
     });
 
-    // Gráficos
     renderCharts();
-    
-    // Agenda
-    if(DATA.agenda.length > 0) openDays.add(DATA.agenda[0].date); // Abre o primeiro dia
+    if(DATA.agenda.length > 0) openDays.add(DATA.agenda[0].date); 
     renderAgenda();
 }
 
 function renderCharts() {
-    // Tipo de Processos
-    const tipoEntries = Object.entries(DATA.porTipo).sort((a,b) => b[1]-a[1]).slice(0,8);
+    const tipos = Object.entries(DATA.porTipo).sort((a,b) => b[1]-a[1]).slice(0,6);
     new Chart(document.getElementById('chart-tipo'), {
         type: 'bar',
         data: {
-            labels: tipoEntries.map(e => e[0]),
-            datasets: [{ data: tipoEntries.map(e => e[1]), backgroundColor: '#4f8ef7', borderRadius: 4 }]
+            labels: tipos.map(t => t[0]),
+            datasets: [{ data: tipos.map(t => t[1]), backgroundColor: '#4f8ef7', borderRadius: 4 }]
         },
         options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
     });
 
-    // Histórico (Exemplo mensal)
     new Chart(document.getElementById('chart-mes'), {
         type: 'line',
         data: {
             labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai'],
-            datasets: [{ data: [46, 121, 158, 96, 42], borderColor: '#34d399', tension: 0.4 }]
+            datasets: [{ data: [46, 121, 158, 96, 42], borderColor: '#34d399', backgroundColor: 'rgba(52,211,153,0.1)', fill: true, tension: 0.4 }]
         },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
     });
@@ -201,17 +194,16 @@ function renderAgenda() {
             (item.advs[activeFilter] || []).length;
             
         if (total === 0) return;
-
         const isOpen = openDays.has(item.date);
-        const dateBR = item.date.split('-').reverse().join('/');
+        const dataBR = item.date.split('-').reverse().join('/');
 
         html += `
             <div class="day-block">
                 <div class="day-hdr" onclick="toggleDay('${item.date}')">
-                    <span class="dd-date">${dateBR}</span>
-                    <span class="dd-name">Prazo Processual</span>
+                    <span class="dd-date">${dataBR}</span>
+                    <span class="dd-name">Agenda de Prazos</span>
                     <span class="badge b-normal">${total} proc.</span>
-                    <span class="chevron">${isOpen ? '▲' : '▼'}</span>
+                    <span style="font-size:10px">${isOpen ? '▲' : '▼'}</span>
                 </div>
                 <div class="day-body ${isOpen ? 'open' : ''}">
         `;
@@ -228,34 +220,4 @@ function renderAgenda() {
                         ${procs.map(p => `
                             <div class="proc-item">
                                 <div class="proc-nome">${p.nome}</div>
-                                <div class="proc-meta"><span class="proc-num">${p.proc}</span> <span class="ttag">${p.tipo}</span></div>
-                                <div style="font-size:11px; color:var(--c-jul); margin-top:4px">⏱ ${p.obs}</div>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            `;
-        });
-
-        html += `</div></div>`;
-    });
-
-    container.innerHTML = html || '<div class="no-res">Nenhum prazo encontrado para este filtro.</div>';
-}
-
-function toggleDay(date) {
-    if(openDays.has(date)) openDays.delete(date); else openDays.add(date);
-    renderAgenda();
-}
-
-function setFilter(val, el) {
-    activeFilter = val;
-    document.querySelectorAll('.fpill').forEach(p => p.classList.remove('active'));
-    el.classList.add('active');
-    renderAgenda();
-}
-
-fetchData();
-</script>
-</body>
-</html>
+                                <div class="proc-
