@@ -2,111 +2,95 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>PROJUR IPSEM — Dashboard Oficial</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<title>PROJUR IPSEM — Dashboard 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono&family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
-    :root{--bg:#0f1117;--bg2:#161b27;--border:rgba(255,255,255,0.07);--text:#e8eaf0;--text2:#8b92a8;--c-jos:#4f8ef7;--c-jul:#34d399;--c-jun:#a78bfa;--c-raf:#fb923c}
+    :root{--bg:#0f1117;--bg2:#161b27;--border:rgba(255,255,255,0.07);--text:#e8eaf0;--c-jos:#4f8ef7;--c-jul:#34d399;--c-jun:#a78bfa;--c-raf:#fb923c}
     body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);margin:0;padding:20px}
-    .metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:24px}
-    .m-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;border-top:2px solid var(--c-jos)}
-    .adv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;margin-bottom:24px}
-    .day-item{background:var(--bg2);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden}
-    .day-header{padding:14px 20px;display:flex;justify-content:space-between;cursor:pointer;background:rgba(255,255,255,0.02)}
-    .day-content{padding:15px;border-top:1px solid var(--border);display:block}
-    .f-pill{background:transparent;border:1px solid var(--border);color:var(--text2);padding:8px 16px;border-radius:20px;cursor:pointer;margin-right:8px;font-family:'IBM Plex Mono'}
+    .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:20px}
+    .card{background:var(--bg2);padding:20px;border-radius:10px;border:1px solid var(--border)}
+    .f-pill{background:transparent;border:1px solid var(--border);color:#8b92a8;padding:6px 12px;border-radius:20px;cursor:pointer;margin-right:5px;font-size:11px}
     .f-pill.active{background:var(--text);color:var(--bg)}
-    .proc-item{padding:10px 0;border-bottom:1px solid var(--border)}
-    .proc-item:last-child{border-bottom:none}
+    .day-block{background:var(--bg2);border:1px solid var(--border);border-radius:8px;margin-bottom:10px}
+    .day-hdr{padding:12px;cursor:pointer;display:flex;justify-content:space-between;font-weight:600}
+    .day-body{padding:0 12px 12px;border-top:1px solid var(--border)}
+    .proc{padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.03)}
 </style>
 </head>
 <body>
-    <div style="margin-bottom:30px">
-        <h2 style="font-weight:500">IPSEM Campina Grande — Dashboard de Processos 2026</h2>
-        <div id="status" style="font-size:11px;color:var(--text2)">Sincronizando...</div>
+    <div style="margin-bottom:20px">
+        <h2 style="margin:0">PROJUR IPSEM Dashboard</h2>
+        <div id="sync" style="font-size:11px;color:#555d72">Sincronizando...</div>
     </div>
 
-    <div class="metrics-grid" id="metrics"></div>
-    <div class="adv-grid" id="advs"></div>
-
-    <h3 style="font-family:'IBM Plex Mono';font-size:12px;margin-bottom:15px">AGENDA DE PRAZOS (MAIO - JULHO)</h3>
-    <div id="filters" style="margin-bottom:20px">
-        <button class="f-pill active" onclick="filter('Todos', this)">TODOS</button>
+    <div class="metrics">
+        <div class="card" style="border-top:3px solid var(--c-jos)">Total: <span id="t-total">...</span></div>
+        <div class="card" style="border-top:3px solid var(--c-jul)">Com Prazo: <span id="t-prazo">...</span></div>
+        <div class="card" style="border-top:3px solid var(--c-jun)">Judiciais: <span id="t-jud">...</span></div>
+        <div class="card" style="border-top:3px solid var(--c-raf)">TCE/PB: <span id="t-tce">...</span></div>
     </div>
-    <div id="agenda"></div>
+
+    <div style="margin-bottom:15px" id="filters">
+        <button class="f-pill active" onclick="filtrar('Todos', this)">TODOS</button>
+    </div>
+    <div id="agenda-lista"></div>
 
 <script>
 const API = "https://script.google.com/macros/s/AKfycbwHMhqcltmxQil4TbSIejrc-cDbne5Q7Jlt8ZM_scAPaksUz1k-UE6GL72B1DKnO57v/exec";
-const COLORS = {JOSINALDO:'#4f8ef7', JULIANA:'#34d399', JULIANNE:'#a78bfa', RAFAELLE:'#fb923c'};
-let data = null;
+let d_bruto = null;
 
-async function load() {
+async function carregar() {
     const r = await fetch(API);
-    data = await r.json();
-    render();
-}
-
-function render() {
-    document.getElementById('status').innerText = "Última atualização: " + data.geradoEm;
+    d_bruto = await r.json();
     
-    // Renderiza Advogados e Filtros
-    const advs = document.getElementById('advs');
-    const filters = document.getElementById('filters');
-    ['JOSINALDO', 'JULIANA', 'JULIANNE', 'RAFAELLE'].forEach(name => {
-        const color = COLORS[name];
-        advs.innerHTML += `<div class="m-card" style="border-top-color:${color}">
-            <div style="font-size:12px;color:var(--text2)">${name}</div>
-            <div style="font-size:32px;font-weight:600">${data.porAdv[name] || 0}</div>
-            <div style="font-size:11px;color:var(--text2)">Processos Ativos</div>
-        </div>`;
-        filters.innerHTML += `<button class="f-pill" onclick="filter('${name}', this)" style="border-color:${color}55">${name}</button>`;
+    document.getElementById('t-total').innerText = d_bruto.total;
+    document.getElementById('t-prazo').innerText = d_bruto.comPrazo;
+    document.getElementById('t-jud').innerText = d_bruto.porTipo['JUDICIAL'] || 0;
+    document.getElementById('t-tce').innerText = d_bruto.porTipo['TCE'] || 0;
+    document.getElementById('sync').innerText = "Atualizado: " + d_bruto.geradoEm;
+
+    const fs = document.getElementById('filters');
+    ['JOSINALDO','JULIANA','JULIANNE','RAFAELLE'].forEach(a => {
+        fs.innerHTML += `<button class="f-pill" onclick="filtrar('${a}', this)">${a}</button>`;
     });
 
-    filter('Todos');
+    filtrar('Todos');
 }
 
-function filter(name, btn) {
+function filtrar(adv, btn) {
     if(btn) {
         document.querySelectorAll('.f-pill').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
     }
-    
-    const cont = document.getElementById('agenda');
-    cont.innerHTML = '';
+    const lista = document.getElementById('agenda-lista');
+    lista.innerHTML = '';
 
-    // Ordenação robusta das datas
-    const sortedAgenda = data.agenda.sort((a,b) => new Date(a.date) - new Date(b.date));
-
-    sortedAgenda.forEach(day => {
+    d_bruto.agenda.forEach(dia => {
         let procs = [];
-        if(name === 'Todos') {
-            Object.values(day.advs).forEach(list => procs = procs.concat(list));
-        } else {
-            procs = day.advs[Object.keys(day.advs).find(k => k.toUpperCase() === name.toUpperCase())] || [];
-        }
+        if(adv === 'Todos') Object.values(dia.advs).forEach(l => procs = procs.concat(l));
+        else procs = dia.advs[adv] || [];
 
         if(procs.length > 0) {
-            const dateObj = new Date(day.date + "T12:00:00");
-            const dateStr = dateObj.toLocaleDateString('pt-BR');
-            const rows = procs.map(p => `
-                <div class="proc-item">
-                    <div style="font-weight:600">${p.nome}</div>
-                    <div style="font-size:11px;color:var(--text2)">${p.proc} | ${p.tipo}</div>
-                    <div style="font-size:11px;margin-top:4px">Obs: ${p.obs}</div>
+            const itens = procs.map(p => `
+                <div class="proc">
+                    <div style="font-weight:600;color:#fff">${p.nome}</div>
+                    <div style="font-size:11px;color:#8b92a8">${p.proc} | ${p.tipo}</div>
+                    <div style="font-size:11px;margin-top:5px;color:var(--c-jul)">Obs: ${p.obs}</div>
                 </div>`).join('');
-
-            cont.innerHTML += `
-                <div class="day-item">
-                    <div class="day-header" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">
-                        <span><strong>${dateStr}</strong></span>
-                        <span style="font-size:11px;color:var(--text2)">${procs.length} PROC. ▾</span>
+            
+            const dataF = dia.date.split('-').reverse().join('/');
+            lista.innerHTML += `
+                <div class="day-block">
+                    <div class="day-hdr" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">
+                        <span>${dataF}</span><span>${procs.length} ▾</span>
                     </div>
-                    <div class="day-content">${rows}</div>
+                    <div class="day-body">${itens}</div>
                 </div>`;
         }
     });
 }
-load();
+carregar();
 </script>
 </body>
 </html>
